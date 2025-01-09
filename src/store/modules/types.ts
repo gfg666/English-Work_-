@@ -1,0 +1,20 @@
+// 轨道类型
+export enum classificationTrack {
+    'video' = '视频轨道',
+    'image' = '视频轨道',
+    'tailor' = '裁剪轨道',
+    'storyboard' = '分镜轨道',
+    'oralBroadcast' = '口播轨道',
+    'oralBroadcastStory' = '口播分镜轨道',
+    'pip' = '画中画轨道',
+    'pipImage' = '画中画轨道',
+    'music' = '音乐轨道',
+    'AI' = 'AI智能切片轨道',
+    'sticker' = '贴纸轨道',
+    'text' = '文字轨道',
+    'stickerStory' = '贴纸分镜轨道',
+    'textStory' = '文字分镜轨道',
+    'specialEffects' = '特效轨道',
+    'filter' = '滤镜轨道',
+    'transitions' = '转场轨道',
+}

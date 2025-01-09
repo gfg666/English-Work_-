@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+
+<head>
+	<meta charset="UTF-8" />
+	<link rel="icon" href="/favicon.ico" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+	<title>一方云剪</title>
+</head>
+
+<body>
+	<div id="app"></div>
+	<script type="module" src="/src/main.ts"></script>
+	<script type="text/javascript">
+		//js判断是mac还是windows系统
+		function WhichSystem() {
+			var agent = navigator.userAgent.toLowerCase()
+			var isMac = /macintosh|mac os x/i.test(navigator.userAgent)
+			let node = document.querySelector('body')
+			console.log(isMac, '是否是MAC系统')
+			console.log(document.querySelector('body'), 'body节点样式')
+			if (isMac) {
+				node.style.fontFamily = "PingFang SC"
+			} else {
+				node.style.fontFamily = "黑体"
+			}
+		}
+		WhichSystem();
+	</script>
+</body>
+
+</html>
