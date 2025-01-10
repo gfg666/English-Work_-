@@ -7,11 +7,15 @@
 
         <div v-if="!projects.length" class="empty-state">
             <div class="empty-content">
-                <el-icon class="empty-icon"><VideoCamera /></el-icon>
+                <el-icon class="empty-icon">
+                    <VideoCamera />
+                </el-icon>
                 <p class="empty-text">还没有创建任何项目</p>
                 <p class="empty-subtext">点击"新建项目"开始创作吧！</p>
                 <el-button type="primary" class="mt-4" @click="createNewProject">
-                    <el-icon class="mr-2"><Plus /></el-icon>
+                    <el-icon class="mr-2">
+                        <Plus />
+                    </el-icon>
                     新建项目
                 </el-button>
             </div>
@@ -104,10 +108,13 @@ const handleCreateProject = async () => {
 };
 
 const openProject = (project: Project) => {
-    // 获取当前窗口的URL
+    // 获取当前窗口的URL和路径
     const baseUrl = window.location.origin;
-    // 构建项目URL
-    const projectUrl = `${baseUrl}/#/clip/${project.id}`;
+    const basePath = window.location.pathname;
+    // 处理基础路径 - 移除最后一级路径(projects)及其后的内容
+    const cleanBasePath = basePath.split('/projects')[0];
+    // 构建项目URL,确保使用正确的基础路径
+    const projectUrl = `${baseUrl}${cleanBasePath}#/clip/${project.id}`;
     // 在新标签页中打开
     window.open(projectUrl, '_blank');
 };
@@ -119,7 +126,7 @@ const confirmDelete = (project: Project) => {
 
 const handleDeleteProject = async () => {
     if (!projectToDelete.value?.id) return;
-    
+
     try {
         await db.projects.delete(projectToDelete.value.id);
         ElMessage.success('项目删除成功');

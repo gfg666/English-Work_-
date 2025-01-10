@@ -34,7 +34,7 @@ const routes: Array<RouteRecordRaw> = [
  * 使用hash模式的路由历史
  */
 const router = createRouter({
-  history: createWebHashHistory("/yifang-clip/"),
+  history: createWebHashHistory(),
   routes,
 });
 
