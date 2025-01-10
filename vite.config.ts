@@ -25,7 +25,7 @@ export default defineConfig({
       },
     ],
   },
-  base: "./yifang-clip/", // 打包路径
+  base: "./", // 打包路径
   server: {
     host: "localhost",
     headers: {
