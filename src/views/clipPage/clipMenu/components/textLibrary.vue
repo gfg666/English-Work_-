@@ -5,7 +5,7 @@
             <div class="relative group cursor-pointer bg-[#2a2a2a] hover:bg-[#3a3a3a] rounded-lg p-4 flex flex-col items-center"
                 @click="handleAddText(basicTemplate)" draggable="true" @dragstart="handleDragStart(basicTemplate)">
                 <!-- 预览效果 -->
-                <div class="text-white text-xl mb-2">
+                <div class="h-8 text-white text-xl mb-2">
                     {{ basicTemplate.preview }}
                 </div>
                 <!-- 模板名称 -->
@@ -21,15 +21,19 @@
 
             <!-- 花字模板 -->
             <div v-for="template in textTemplates" :key="template.name"
-                class="relative group cursor-pointer bg-[#2a2a2a] hover:bg-[#3a3a3a] rounded-lg aspect-video overflow-hidden"
+                class="relative group cursor-pointer bg-[#2a2a2a] hover:bg-[#3a3a3a] rounded-lg p-4 flex flex-col items-center"
                 @click="handleAddText(template)" draggable="true" @dragstart="handleDragStart(template)">
-                <img :src="template.preview" class="w-full h-full px-3 object-contain" />
+                <div class="h-8 text-white text-xl mb-2">
+                    <img :src="template.preview" class="w-full h-full object-contain" />
+                </div>
+                <!-- 模板名称 -->
+                <div class="text-[#666] text-sm">{{ basicTemplate.name }}</div>
+                <!-- 悬停时显示的添加按钮 -->
                 <div
-                    class="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center transition-opacity">
-                    <el-icon class="text-white text-2xl mb-2">
+                    class="absolute inset-0 bg-purple-500/20 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity rounded-lg">
+                    <el-icon class="text-white text-2xl">
                         <Plus />
                     </el-icon>
-                    <span class="text-white text-sm">{{ template.name }}</span>
                 </div>
             </div>
         </div>
