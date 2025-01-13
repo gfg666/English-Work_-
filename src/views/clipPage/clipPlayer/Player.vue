@@ -14,7 +14,7 @@
         </div>
 
         <!-- 播放器控制栏：包含播放控制和时间显示 -->
-        <div class="control-bar w-full px-4 py-2 flex items-center gap-4">
+        <div class="control-bar w-full px-4 py-4 flex items-center gap-4">
             <!-- 时间显示区域 -->
             <div class="text-white text-base">
                 {{ formatTime(currentTime) }}
@@ -40,7 +40,7 @@
                 </button>
 
                 <!-- 下一帧按钮：逐帧前进 -->
-                <button class="text-white hover:text-purple-500 transition-colors" @click="nextFrame">
+                <button class="text-white hover:text-purple-500 transition-colors" @click="prevFrame">
                     <Icon :icon="'fa-step-forward'"></Icon>
                 </button>
             </div>
@@ -71,7 +71,7 @@ import type { ElMessageBoxOptions } from 'element-plus';
 import { nextTick } from 'vue';
 
 const props = defineProps<{
-    tracks: Track[]
+    tracks: Track[],
     currentTime: number,
     playerDuration: number // 视频总时长
 }>()
@@ -98,12 +98,16 @@ onMounted(() => {
     Log.setLogLevel(Log.warn)
     initCanvas()
     handleResize()
+    // 添加键盘事件监听
+    window.addEventListener('keydown', handleKeyPress)
 })
 onUnmounted(() => {
     cvs?.destroy()
     sprMap.clear()
     cvs = null
     initCount.value = 0
+    // 移除键盘事件监听
+    window.removeEventListener('keydown', handleKeyPress)
 })
 
 const initCanvas = () => {
@@ -397,8 +401,13 @@ const handleResize = () => {
         const observer = new ResizeObserver(entries => {
             for (let entry of entries) {
                 const { width, height } = entry.contentRect;
-
-                trackStore.setCanvasSize({ width: width, height: width * 9 / 16 })
+                const toolBarHeight = document.querySelector('.control-bar')?.clientHeight
+                const playerHeight = height - toolBarHeight
+                if (width / playerHeight > 16 / 9) {
+                    trackStore.setCanvasSize({ width: playerHeight * 16 / 9, height: playerHeight })
+                } else {
+                    trackStore.setCanvasSize({ width: width, height: width * 9 / 16 })
+                }
             }
         })
         observer.observe(playerRef.value)
@@ -425,12 +434,20 @@ const handlePlay = (isPlay: boolean) => {
 
 // 帧控制
 const prevFrame = () => {
+    // 如果正在播放，先暂停
+    if (isPlaying.value) {
+        handlePlay(false)
+    }
     // 实现上一帧逻辑
     emit('timeUpdate', (props.currentTime - 1 / 30))
     cvs.previewFrame(props.currentTime * 1e6)
 }
 
 const nextFrame = () => {
+    // 如果正在播放，先暂停
+    if (isPlaying.value) {
+        handlePlay(false)
+    }
     // 实现下一帧逻辑
     emit('timeUpdate', (props.currentTime + 1 / 30))
     cvs.previewFrame(props.currentTime * 1e6)
@@ -561,6 +578,36 @@ defineExpose({
     activeClip,
     handleExport
 })
+
+/**
+ * 处理键盘事件
+ * 在非输入状态下控制播放/暂停和帧进/帧退
+ */
+const handleKeyPress = (e: KeyboardEvent) => {
+    // 检查当前焦点元素是否为输入类型
+    const activeElement = document.activeElement
+    const isInput = activeElement instanceof HTMLInputElement ||
+        activeElement instanceof HTMLTextAreaElement ||
+        activeElement?.getAttribute('contenteditable') === 'true'
+
+    // 只在非输入状态下响应键盘事件
+    if (!isInput) {
+        switch (e.code) {
+            case 'Space':
+                e.preventDefault() // 阻止页面滚动
+                handlePlay(!isPlaying.value)
+                break
+            case 'ArrowLeft':
+                e.preventDefault() // 阻止页面滚动
+                prevFrame()
+                break
+            case 'ArrowRight':
+                e.preventDefault() // 阻止页面滚动
+                nextFrame()
+                break
+        }
+    }
+}
 </script>
 
 <style scoped>

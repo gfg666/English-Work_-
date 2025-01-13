@@ -11,17 +11,17 @@
             <ClipMenu />
         </div>
         <!-- 中间主要内容区域 -->
-        <div id="middle" class="h-screen overflow-hidden">
+        <div id="right" class="h-screen overflow-hidden">
             <!-- 顶部区域：包含播放器和属性面板 -->
             <div id="top" class="flex justify-between">
                 <!-- 播放器区域 -->
-                <div class="w-4/5">
+                <div id="topLeft" class="w-4/5">
                     <Player ref="playerRef" :currentTime="currentTime" :tracks="tracks"
                         :timelineDuration="timelineDuration" :playerDuration="playerDuration" @prevFrame="prevFrame"
                         @nextFrame="nextFrame" @timeUpdate="timeUpdate" @updateClipProps="updateClipProps" />
                 </div>
                 <!-- 右侧属性面板 -->
-                <div id="right" class="w-1/5 bg-[#303030]">
+                <div id="topRight" class="w-1/5 bg-[#303030]">
                     <ClipProperties :clip="selectedClip" />
                 </div>
             </div>
@@ -40,7 +40,7 @@
 /**
  * 导入所需的组件和工具
  */
-import Player from './components/Player.vue'
+import Player from './clipPlayer/Player.vue'
 import { useTrackStore } from '@/store/modules/track'
 import ClipMenu from './clipMenu/clipMenu.vue'
 import Split from 'split.js'
@@ -195,6 +195,8 @@ provide('activeClip', (id: string | null) => {
     }
 })
 
+const playerWidth = ref(0)
+const playerHeight = ref(0)
 onMounted(async () => {
     // 从localStorage获取Split布局数据
     const savedSizes = localStorage.getItem(SPLIT_STORAGE_KEY)
@@ -203,7 +205,7 @@ onMounted(async () => {
         { horizontalSizes: DEFAULT_HORIZONTAL_SIZES, verticalSizes: DEFAULT_VERTICAL_SIZES }
 
     // 初始化水平分割
-    const horizontalSplit = Split(['#left', '#middle'], {
+    const horizontalSplit = Split(['#left', '#right'], {
         sizes: horizontalSizes,
         minSize: [250, 500],
         snapOffset: 0,
@@ -344,7 +346,7 @@ const handleExport = () => {
     }
 }
 
-#middle .gutter {
+#right .gutter {
     position: relative;
     z-index: 100;
     cursor: row-resize;
