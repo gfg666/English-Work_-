@@ -1,8 +1,5 @@
-import { useTrackStoreWithOut } from "@/store/modules/track";
-import { file, dir, write } from "opfs-tools";
+import { file, write } from "opfs-tools";
 import { OPFSFileWrap } from "opfs-tools/dist/file";
-
-const trackStore = useTrackStoreWithOut();
 
 /**
  * 将文件存储在OPFS中

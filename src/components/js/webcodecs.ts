@@ -1,6 +1,5 @@
 import { MP4Clip, ImgClip, AudioClip } from "@webav/av-cliper";
 import { calculateVolume } from "@/utils/webcodecs";
-import { useTrackStore } from "@/store/modules/track";
 import { Media } from "@/db/db";
 import { file } from "opfs-tools";
 

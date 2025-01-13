@@ -45,7 +45,6 @@ import { useTrackStore } from '@/store/modules/track'
 import { v4 } from 'uuid'
 import { Plus } from '@element-plus/icons-vue'
 import type { TrackClip } from '@/types/track'
-import { baseCanvasSize } from '@/types/type'
 import { textTemplates } from '@/constants/textTemplates'
 
 interface TextTemplate {
