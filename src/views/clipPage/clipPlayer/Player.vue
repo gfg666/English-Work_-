@@ -77,7 +77,7 @@ const props = defineProps<{
     playerDuration: number
 }>()
 
-const emit = defineEmits(['prevFrame', 'nextFrame', 'timeUpdate', 'fullscreenChange', 'updateClipProps'])
+const emit = defineEmits(['prevFrame', 'nextFrame', 'timeUpdate', 'captureImage', 'fullscreenChange', 'updateClipProps'])
 
 // Store & Inject
 const trackStore = useTrackStore()
@@ -103,7 +103,15 @@ const volumeIcon = computed(() => {
 })
 
 const canvasSize = computed(() => trackStore.getCanvasSize)
-const initTotal = computed(() => props.tracks.length)
+const initTotal = computed(() => {
+    let total = 0
+    props.tracks.forEach(track => {
+        track.clips.forEach(clip => {
+            total++
+        })
+    })
+    return total
+})
 
 // 播放器核心方法
 const handlePlay = (isPlay: boolean) => {
@@ -302,6 +310,7 @@ const initClip = async (clip: TrackClip) => {
     // 添加到 sprite map 和 canvas
     sprMap.set(clip.id, spr)
     await cvs?.addSprite(spr)
+    initCount.value++
 
     // 设置位置和大小
     if (clip.type !== 'audio') {
@@ -350,7 +359,6 @@ const initClip = async (clip: TrackClip) => {
         updateClip(updatedClip, type)
     })
 
-    initCount.value++
 }
 
 // 更新相关方法
@@ -544,6 +552,11 @@ watch(() => initCount.value, (newCount) => {
         for (const clip of props.tracks.flatMap(track => track.clips)) {
             updateSpritesZIndex()
         }
+        // 需要等待cvs渲染完成
+        setTimeout(() => {
+            const dataUrl = cvs?.captureImage()
+            emit('captureImage', dataUrl)
+        }, 500)
     }
 })
 

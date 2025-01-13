@@ -18,7 +18,8 @@
                 <div id="topLeft" class="w-4/5">
                     <Player ref="playerRef" :currentTime="currentTime" :tracks="tracks"
                         :timelineDuration="timelineDuration" :playerDuration="playerDuration" @prevFrame="prevFrame"
-                        @nextFrame="nextFrame" @timeUpdate="timeUpdate" @updateClipProps="updateClipProps" />
+                        @nextFrame="nextFrame" @timeUpdate="timeUpdate" @captureImage="captureImage"
+                        @updateClipProps="updateClipProps" />
                 </div>
                 <!-- 右侧属性面板 -->
                 <div id="topRight" class="w-1/5 bg-[#303030]">
@@ -53,6 +54,8 @@ import { Track, TrackClip } from '@/types/track'
 import { getKeyframes, getVolume } from '@/components/js/webcodecs'
 import { cloneDeep } from 'lodash'
 import { ElMessage } from 'element-plus'
+import { dataURLToBuffer } from '@/utils/opfs-file'
+import { file, write } from 'opfs-tools'
 
 /**
  * 禁用浏览器默认的缩放行为
@@ -112,6 +115,17 @@ const clipTrackRef = ref(null)
 
 const timeUpdate = (time: number) => {
     currentTime.value = time
+}
+
+const captureImage = async (dataUrl: string) => {
+    const buffer = dataURLToBuffer(dataUrl)
+    await write('/capture/' + projectId + '.png', buffer, {
+        overwrite: true
+    })
+    const project = await db.projects.where({ id: projectId }).first()
+    if (project) {
+        db.projects.update(project, { thumbnail: '/capture/' + projectId + '.png' })
+    }
 }
 
 const prevFrame = () => {

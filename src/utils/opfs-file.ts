@@ -72,7 +72,6 @@ export async function delFile(filePath: string): Promise<boolean> {
 /**
  * 获取OPFS对应文件路径
  * @param url 文件的网络地址
- * @param layer 文件存储的层级，默认为2
  * @returns 文件路径
  */
 export async function getFileUrl(url: string): Promise<string> {
@@ -84,6 +83,10 @@ export async function getFileUrl(url: string): Promise<string> {
       if (fileExist) {
         const blob = await fileToBlob(fileObject);
         const blobUrl = URL.createObjectURL(blob);
+        console.log(
+          await fileObject.getSize(),
+          await fileObject.getOriginFile()
+        );
         resolve(blobUrl);
       }
     } catch (error) {
@@ -143,4 +146,16 @@ export async function createFileWriter(
     suggestedName: `WebAV-export-${Date.now()}.${extName}`,
   });
   return fileHandle.createWritable();
+}
+
+// 将dataURL转换为buffer
+export function dataURLToBuffer(fileDataURL: string) {
+  const base64Data = fileDataURL.split(",")[1];
+  const binaryString = window.atob(base64Data);
+  const len = binaryString.length;
+  const buffer = new Uint8Array(len);
+  for (let i = 0; i < len; i++) {
+    buffer[i] = binaryString.charCodeAt(i);
+  }
+  return buffer;
 }

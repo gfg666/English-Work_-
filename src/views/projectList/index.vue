@@ -24,7 +24,7 @@
         <div v-else class="projects-grid text-base">
             <div v-for="project in projects" :key="project.id" class="project-card">
                 <div class="thumbnail" @click="openProject(project)">
-                    <img v-if="project.thumbnail" :src="project.thumbnail" alt="项目缩略图">
+                    <img v-if="project.thumbnail" class="rounded-t-xl" :src="project.thumbnail" alt="项目缩略图">
                     <div v-else class="placeholder">无缩略图</div>
                 </div>
                 <div class="info">
@@ -68,6 +68,7 @@ import { db, type Project } from '@/db/db';
 import dayjs from 'dayjs';
 import { ElMessage } from 'element-plus';
 import { VideoCamera, Plus } from '@element-plus/icons-vue';
+import { getFileUrl } from '@/utils/opfs-file';
 
 const router = useRouter();
 const projects = ref<Project[]>([]);
@@ -85,6 +86,9 @@ onMounted(async () => {
 
 const getProjectList = async () => {
     projects.value = await db.projects.toArray();
+    projects.value.forEach(async (project) => {
+        project.thumbnail = await getFileUrl(project.thumbnail)
+    })
 };
 
 const createNewProject = () => {
@@ -217,6 +221,7 @@ const formatDate = (timestamp: number) => {
     display: flex;
     align-items: center;
     justify-content: center;
+    padding: 5px;
 }
 
 .placeholder {
