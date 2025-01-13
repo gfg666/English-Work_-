@@ -100,7 +100,7 @@
                 <TracksList ref="tracksListRef" :tracks="tracks" :hoveredTrack="hoveredTrack" :dragPreview="dragPreview"
                     :dragPreviewPosition="dragPreviewPosition" :dragPreviewWidth="dragPreviewWidth" :zoom="trackZoom"
                     :frameLength="BASE_TICK_SPACING * trackZoom * 10" @start-resize="startResize"
-                    @track-drag-enter="handleTrackDragEnter" @track-drag-leave="handleTrackDragLeave" @drop="handleDrop"
+                    @track-drag-enter="handleTrackDragEnter" @track-drag-leave="handleTrackDragLeave"
                     @clip-mouse-down="handleClipMouseDown" @clip-hover="handleClipHover" @delete-clip="handleDeleteClip"
                     @background-click="handleBackgroundClick" @save-history-state="saveHistoryState" />
             </div>
@@ -429,8 +429,8 @@ const initialStartTime = ref(0)
 const initialEndTime = ref(0)
 
 // 处理片段悬停
-const handleClipHover = (clip: any, isEnter: boolean) => {
-    if (isEnter && !selectedClip.value) {
+const handleClipHover = (clip: TrackClip) => {
+    if (!selectedClip.value) {
         selectedClip.value = clip
     }
 }

@@ -70,46 +70,106 @@ import { ElMessageBox, ElMessage } from 'element-plus';
 import type { ElMessageBoxOptions } from 'element-plus';
 import { nextTick } from 'vue';
 
+// Props & Emits
 const props = defineProps<{
     tracks: Track[],
     currentTime: number,
-    playerDuration: number // 视频总时长
+    playerDuration: number
 }>()
-// 定义组件事件
+
 const emit = defineEmits(['prevFrame', 'nextFrame', 'timeUpdate', 'fullscreenChange', 'updateClipProps'])
 
+// Store & Inject
 const trackStore = useTrackStore()
-
 const injectActiveClip = inject('activeClip') as ((id: string) => void) | undefined
 
+// 状态变量
 const loading = ref(true)
-// 播放器状态
 const isPlaying = ref(false)
 const volume = ref(100)
 const isMuted = ref(false)
 const isFullscreen = ref(false)
-
-// av-canvas引用
 const avCanvas = ref(null)
-
+const playerRef = ref<HTMLElement | null>(null)
+const initCount = ref(0)
 let cvs = null
 
-onMounted(() => {
-    Log.setLogLevel(Log.warn)
-    initCanvas()
-    handleResize()
-    // 添加键盘事件监听
-    window.addEventListener('keydown', handleKeyPress)
-})
-onUnmounted(() => {
-    cvs?.destroy()
-    sprMap.clear()
-    cvs = null
-    initCount.value = 0
-    // 移除键盘事件监听
-    window.removeEventListener('keydown', handleKeyPress)
+// 计算属性
+const volumeIcon = computed(() => {
+    if (isMuted.value || volume.value === 0) return 'fa-volume-mute'
+    if (volume.value < 30) return 'fa:volume-off'
+    if (volume.value < 70) return 'fa-volume-down'
+    return 'fa-volume-up'
 })
 
+const canvasSize = computed(() => trackStore.getCanvasSize)
+const initTotal = computed(() => props.tracks.length)
+
+// 播放器核心方法
+const handlePlay = (isPlay: boolean) => {
+    if (isPlay) {
+        cvs.play({ start: props.currentTime * 1e6 })
+        isPlaying.value = true
+    } else {
+        cvs.pause()
+        isPlaying.value = false
+    }
+}
+
+const prevFrame = () => {
+    if (isPlaying.value) {
+        handlePlay(false)
+    }
+    emit('timeUpdate', (props.currentTime - 1 / 30))
+    cvs.previewFrame(props.currentTime * 1e6)
+}
+
+const nextFrame = () => {
+    if (isPlaying.value) {
+        handlePlay(false)
+    }
+    emit('timeUpdate', (props.currentTime + 1 / 30))
+    cvs.previewFrame(props.currentTime * 1e6)
+}
+
+// 全屏控制
+const toggleFullscreen = () => {
+    isFullscreen.value = !isFullscreen.value
+    if (isFullscreen.value) {
+        if (playerRef.value) {
+            playerRef.value.requestFullscreen()
+        }
+    } else {
+        document.exitFullscreen()
+    }
+}
+
+// 键盘控制相关
+const handleKeyPress = (e: KeyboardEvent) => {
+    const activeElement = document.activeElement
+    const isInput = activeElement instanceof HTMLInputElement ||
+        activeElement instanceof HTMLTextAreaElement ||
+        activeElement?.getAttribute('contenteditable') === 'true'
+
+    if (!isInput) {
+        switch (e.code) {
+            case 'Space':
+                e.preventDefault()
+                handlePlay(!isPlaying.value)
+                break
+            case 'ArrowLeft':
+                e.preventDefault()
+                prevFrame()
+                break
+            case 'ArrowRight':
+                e.preventDefault()
+                nextFrame()
+                break
+        }
+    }
+}
+
+// Canvas 初始化和管理
 const initCanvas = () => {
     cvs = new AVCanvas(avCanvas.value, {
         bgColor: '#000',
@@ -142,9 +202,8 @@ const initCanvas = () => {
     });
 }
 
+// Clip 管理相关方法
 const sprMap = new Map<string, VisibleSprite>()
-const initCount = ref(0)
-const initTotal = computed(() => props.tracks.length)
 
 const initClips = () => {
     props.tracks.forEach(track => {
@@ -153,17 +212,19 @@ const initClips = () => {
         })
     })
 }
+
 const addClip = (clip: TrackClip) => {
     initClip(clip)
 }
+
 const activeClip = (clip: TrackClip | null) => {
     if (!clip) return cvs.activeSprite = null
     const spr = sprMap.get(clip.id)
-    // 对于audio-clip等没有宽高的sprite，不显示控制点
     if (cvs && spr?.visible) {
         cvs.activeSprite = spr
     }
 }
+
 const initClip = async (clip: TrackClip) => {
     if (sprMap.has(clip.id)) return
 
@@ -174,7 +235,6 @@ const initClip = async (clip: TrackClip) => {
         case 'video': {
             let fileObject = await getFile(clip.path)
             let mp4Clip = await new MP4Clip(await fileObject.stream())
-            // 音量调整
             mp4Clip.tickInterceptor = async (_, tickRet) => {
                 let list = []
                 for (const audio of tickRet.audio) {
@@ -237,15 +297,15 @@ const initClip = async (clip: TrackClip) => {
     spr.time.duration = Number(clip.duration) * 1e6
     spr.opacity = Number((clip.opacity / 100).toFixed(2))
     spr.rect.fixedScaleCenter = true
-    spr.rect.fixedAspectRatio = true // 文字因缩放比例问题，需要固定宽高比
+    spr.rect.fixedAspectRatio = true
 
     // 添加到 sprite map 和 canvas
     sprMap.set(clip.id, spr)
     await cvs?.addSprite(spr)
+
     // 设置位置和大小
     if (clip.type !== 'audio') {
         if (!clip.w) {
-            // 视频和图片初始化时需要设置宽高
             if (clip.type === 'text') {
                 emit('updateClipProps', clip.id, {
                     x: spr.rect.x,
@@ -275,7 +335,6 @@ const initClip = async (clip: TrackClip) => {
     // 设置事件监听
     spr.rect.on('propsChange', (event) => {
         if (clip.type === 'text') {
-            // 针对固定宽高比的情况，更新字体大小来实现缩放，其他情况需自行调节
             if ('w' in event && clip.w) {
                 clip.textConfig.fontSize = event.w / clip.w * clip.textConfig.fontSize
                 clip.w = event.w
@@ -294,20 +353,15 @@ const initClip = async (clip: TrackClip) => {
     initCount.value++
 }
 
-// 计算并更新sprite的zIndex
+// 更新相关方法
 const updateSpritesZIndex = () => {
     let currentZIndex = 0
-
-    // 遍历所有轨道,从上到下
     props.tracks.forEach((track) => {
-        // 先处理非文字类型
         track.clips.forEach(clip => {
             const spr = sprMap.get(clip.id)
             if (!spr || clip.type === 'text') return
             spr.zIndex = currentZIndex++
         })
-
-        // 再处理文字类型,确保同一轨道的文字显示在其他类型上面
         track.clips.forEach(clip => {
             const spr = sprMap.get(clip.id)
             if (!spr || clip.type !== 'text') return
@@ -336,15 +390,12 @@ const updateClip = async (clip: TrackClip, type: 'default' | 'resize' | 'delete'
         return
     }
 
-    // 更新通用属性
     spr.time.offset = clip.startTime * 1e6
     spr.time.duration = Number(clip.duration) * 1e6
     spr.opacity = Number((clip.opacity / 100).toFixed(2))
 
-    // 更新zIndex
     updateSpritesZIndex()
 
-    // 根据类型更新特定属性
     if (clip.type === 'text') {
         const textClip: TextClip = spr.getClip() as TextClip
         textClip.textConfig = clip.textConfig
@@ -369,109 +420,11 @@ const refreshPlayer = () => {
     })
 }
 
-watch(() => initCount.value, (newCount) => {
-    if (newCount === initTotal.value) {
-        loading.value = false
-        cvs?.previewFrame(props.currentTime * 1e6)
-        // 更新zIndex
-        for (const clip of props.tracks.flatMap(track => track.clips)) {
-            updateSpritesZIndex()
-        }
-    }
-})
-
-watch(() => props.currentTime, (newTime) => {
-    if (!isPlaying.value) {
-        cvs.previewFrame(newTime * 1e6)
-    }
-})
-
-// 音量图标计算属性
-const volumeIcon = computed(() => {
-    if (isMuted.value || volume.value === 0) return 'fa-volume-mute'
-    if (volume.value < 30) return 'fa:volume-off'
-    if (volume.value < 70) return 'fa-volume-down'
-    return 'fa-volume-up'
-})
-
-const playerRef = ref<HTMLElement | null>(null)
-const canvasSize = computed(() => trackStore.getCanvasSize)
-const handleResize = () => {
-    if (playerRef.value) {
-        const observer = new ResizeObserver(entries => {
-            for (let entry of entries) {
-                const { width, height } = entry.contentRect;
-                const toolBarHeight = document.querySelector('.control-bar')?.clientHeight
-                const playerHeight = height - toolBarHeight
-                if (width / playerHeight > 16 / 9) {
-                    trackStore.setCanvasSize({ width: playerHeight * 16 / 9, height: playerHeight })
-                } else {
-                    trackStore.setCanvasSize({ width: width, height: width * 9 / 16 })
-                }
-            }
-        })
-        observer.observe(playerRef.value)
-    }
-}
-
-// 格式化时间
-const formatTime = (seconds: number) => {
-    const minutes = Math.floor(seconds / 60)
-    const remainingSeconds = Math.floor(seconds % 60)
-    return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`
-}
-
-// 播放控制
-const handlePlay = (isPlay: boolean) => {
-    if (isPlay) {
-        cvs.play({ start: props.currentTime * 1e6 })
-        isPlaying.value = true
-    } else {
-        cvs.pause()
-        isPlaying.value = false
-    }
-}
-
-// 帧控制
-const prevFrame = () => {
-    // 如果正在播放，先暂停
-    if (isPlaying.value) {
-        handlePlay(false)
-    }
-    // 实现上一帧逻辑
-    emit('timeUpdate', (props.currentTime - 1 / 30))
-    cvs.previewFrame(props.currentTime * 1e6)
-}
-
-const nextFrame = () => {
-    // 如果正在播放，先暂停
-    if (isPlaying.value) {
-        handlePlay(false)
-    }
-    // 实现下一帧逻辑
-    emit('timeUpdate', (props.currentTime + 1 / 30))
-    cvs.previewFrame(props.currentTime * 1e6)
-}
-
-// 全屏控制
-const toggleFullscreen = () => {
-    isFullscreen.value = !isFullscreen.value
-    // playerRef全屏
-    if (isFullscreen.value) {
-        if (playerRef.value) {
-            playerRef.value.requestFullscreen()
-        }
-    } else {
-        document.exitFullscreen()
-    }
-}
-
-// 导出
+// 导出相关
 const handleExport = async () => {
     const com = await cvs?.createCombinator()
 
     try {
-        // 创建导出进度弹窗
         const options: ElMessageBoxOptions = {
             dangerouslyUseHTMLString: true,
             showClose: false,
@@ -498,11 +451,9 @@ const handleExport = async () => {
             </div>
         `, '导出进度', options)
 
-        // 等待DOM更新
         await nextTick()
 
         com.on('OutputProgress', (prog: number) => {
-            // 更新进度条内容
             const percentage = Math.round(prog * 100)
             const messageEl = document.querySelector('.el-message-box__message')
             if (messageEl) {
@@ -515,14 +466,11 @@ const handleExport = async () => {
                     </div>
                 `
 
-                // 当进度为100%时
                 if (prog === 1) {
-                    // 隐藏取消按钮
                     const cancelBtn = document.querySelector('.el-message-box__cancel') as HTMLElement
                     if (cancelBtn) {
                         cancelBtn.style.display = 'none'
                     }
-                    // 更新内容
                     messageEl.innerHTML = `
                         <div class="flex flex-col gap-2 w-full min-w-[300px]">
                             <div class="text-center text-green-500 text-base">导出完成！</div>
@@ -531,7 +479,6 @@ const handleExport = async () => {
                             </div>
                         </div>
                     `
-                    // 3秒后自动关闭
                     setTimeout(() => {
                         ElMessageBox.close()
                     }, 3000)
@@ -540,11 +487,79 @@ const handleExport = async () => {
         })
         await com?.output().pipeTo(await createFileWriter())
     } catch (error: any) {
-        // 如果出现错误，关闭弹窗并显示错误信息
         ElMessageBox.close()
         ElMessage.error('导出失败：' + error.message)
     }
 }
+
+// 工具方法
+const formatTime = (seconds: number) => {
+    const minutes = Math.floor(seconds / 60)
+    const remainingSeconds = Math.floor(seconds % 60)
+    return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`
+}
+
+const handleResize = () => {
+    if (playerRef.value) {
+        const observer = new ResizeObserver(entries => {
+            for (let entry of entries) {
+                const { width, height } = entry.contentRect;
+                const toolBarHeight = document.querySelector('.control-bar')?.clientHeight
+                const playerHeight = height - toolBarHeight
+                if (width / playerHeight > 16 / 9) {
+                    trackStore.setCanvasSize({ width: playerHeight * 16 / 9, height: playerHeight })
+                } else {
+                    trackStore.setCanvasSize({ width: width, height: width * 9 / 16 })
+                }
+            }
+        })
+        observer.observe(playerRef.value)
+    }
+}
+
+// 生命周期钩子
+onMounted(() => {
+    Log.setLogLevel(Log.warn)
+    initCanvas()
+    handleResize()
+    window.addEventListener('keydown', handleKeyPress)
+})
+
+onUnmounted(() => {
+    cvs?.destroy()
+    sprMap.clear()
+    cvs = null
+    initCount.value = 0
+    window.removeEventListener('keydown', handleKeyPress)
+    for (const clipId of sprMap.keys()) {
+        trackStore.unsubscribeFromClipUpdates(clipId)
+    }
+})
+
+// 监听器
+watch(() => initCount.value, (newCount) => {
+    if (newCount === initTotal.value) {
+        loading.value = false
+        cvs?.previewFrame(props.currentTime * 1e6)
+        for (const clip of props.tracks.flatMap(track => track.clips)) {
+            updateSpritesZIndex()
+        }
+    }
+})
+
+watch(() => props.currentTime, (newTime) => {
+    if (!isPlaying.value) {
+        cvs.previewFrame(newTime * 1e6)
+    }
+})
+
+// 导出方法
+defineExpose({
+    refreshPlayer,
+    addClip,
+    activeClip,
+    handleExport
+})
 
 // 添加样式
 const style = document.createElement('style')
@@ -563,51 +578,6 @@ style.textContent = `
 }
 `
 document.head.appendChild(style)
-
-// 组件卸载时取消订阅
-onUnmounted(() => {
-    // 取消所有订阅
-    for (const clipId of sprMap.keys()) {
-        trackStore.unsubscribeFromClipUpdates(clipId)
-    }
-})
-
-defineExpose({
-    refreshPlayer,
-    addClip,
-    activeClip,
-    handleExport
-})
-
-/**
- * 处理键盘事件
- * 在非输入状态下控制播放/暂停和帧进/帧退
- */
-const handleKeyPress = (e: KeyboardEvent) => {
-    // 检查当前焦点元素是否为输入类型
-    const activeElement = document.activeElement
-    const isInput = activeElement instanceof HTMLInputElement ||
-        activeElement instanceof HTMLTextAreaElement ||
-        activeElement?.getAttribute('contenteditable') === 'true'
-
-    // 只在非输入状态下响应键盘事件
-    if (!isInput) {
-        switch (e.code) {
-            case 'Space':
-                e.preventDefault() // 阻止页面滚动
-                handlePlay(!isPlaying.value)
-                break
-            case 'ArrowLeft':
-                e.preventDefault() // 阻止页面滚动
-                prevFrame()
-                break
-            case 'ArrowRight':
-                e.preventDefault() // 阻止页面滚动
-                nextFrame()
-                break
-        }
-    }
-}
 </script>
 
 <style scoped>
@@ -621,6 +591,7 @@ const handleKeyPress = (e: KeyboardEvent) => {
 
 /* 自定义滑块样式 */
 input[type="range"] {
+    appearance: none;
     -webkit-appearance: none;
     height: 4px;
     background: rgba(255, 255, 255, 0.3);
