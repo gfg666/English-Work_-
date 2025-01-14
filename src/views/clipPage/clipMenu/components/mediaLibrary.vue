@@ -185,7 +185,6 @@ const beforeUpload = async (fileObject: any) => {
                     if (animateImgTypeList.includes(mineType)) {
                         const imgClip = new ImgClip({ type: `image/${mineType}` as any, stream: await fileObject.stream() })
                         const readyRes = await imgClip.ready
-                        console.log(readyRes)
                         const { video: data1 }: any = await imgClip.tick(0)
                         const { video: data2 }: any = await imgClip.tick(1000000)
                         const offscreenCanvas = new OffscreenCanvas(data1.codedWidth, data1.codedHeight)
@@ -209,7 +208,6 @@ const beforeUpload = async (fileObject: any) => {
             default:
                 break;
         }
-        console.log(media.duration)
         if (needUpdate && res) {
             media.updateTime = new Date().getTime()
             await db.medias.where({ 'name': fileObject.name }).modify(media)
@@ -248,7 +246,6 @@ const openMenu = (event: MouseEvent, item: Media) => {
     trackStore.setShowContextMenu(true)
     const { offsetX, offsetY } = event
     trackStore.setContextMenuPosition({ x: offsetX, y: offsetY })
-    console.log(contextMenuPosition.value)
 }
 
 const handleMouseover = (item: MediaItem, index: number) => {

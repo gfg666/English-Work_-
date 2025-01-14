@@ -129,6 +129,7 @@ const props = defineProps<{
 }>()
 const emit = defineEmits<{
     (e: 'resetTrack'): void
+    (e: 'stopPlay'): void
     (e: 'timeUpdate', time: number): void
     (e: 'refreshPlayer'): void
     (e: 'add-clip', clip: TrackClip): void
@@ -280,7 +281,6 @@ const resetClipsPosition = () => {
 
 // 修改 handleDrop 函数
 const handleDrop = async (e: DragEvent) => {
-    console.log('handleDrop')
     e.preventDefault()
     const rect = (e.currentTarget as HTMLElement).getBoundingClientRect()
     const relativeX = e.clientX - rect.left
@@ -340,7 +340,6 @@ const handleDrop = async (e: DragEvent) => {
         currentTrack.clips.push(newClip)
         currentTrack.clips.sort((a, b) => a.startTime - b.startTime)
     } else if (props.tracks.length < props.maxTracksNum) {
-        console.log('create new track')
         // 如果没有选中轨道且轨道数量未达到上限，创建新轨道
         props.tracks.push({
             id: v4(),
@@ -892,6 +891,7 @@ onUnmounted(() => {
 
 const handleTimeUpdate = (time: number) => {
     // 触发播放时间更新事件
+    emit('stopPlay')
     emit('timeUpdate', time)
 }
 
@@ -913,7 +913,6 @@ const trackContainer = ref<HTMLElement | null>(null)
 
 // 处理时间标尺滚动
 const handleRulerScroll = (delta: number) => {
-    console.log('handleRulerScroll', delta)
     if (trackContainer.value) {
         const maxScroll = trackContainer.value.scrollWidth - trackContainer.value.clientWidth
         const newScrollLeft = Math.max(0, Math.min(
@@ -1020,7 +1019,6 @@ const handleSplit = async () => {
         selectedClip.value.sourceEndTime = Number(selectedClip.value.sourceEndTime) - (props.currentTime - Number(selectedClip.value.startTime))
     }
 
-    console.log(nextClip)
     getClipTrack(selectedClip.value).clips.push(nextClip)
     trackStore.publishClipUpdate(selectedClip.value)
     emit('add-clip', nextClip)

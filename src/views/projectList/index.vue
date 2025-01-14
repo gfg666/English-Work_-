@@ -119,7 +119,6 @@ const openProject = (project: Project) => {
     const cleanBasePath = basePath.split('/projects')[0];
     // 构建项目URL,确保使用正确的基础路径
     const projectUrl = `${baseUrl}${cleanBasePath}#/clip/${project.id}`;
-    console.log(baseUrl, basePath, cleanBasePath, projectUrl);
     // 在新标签页中打开
     window.open(projectUrl, '_blank');
 };

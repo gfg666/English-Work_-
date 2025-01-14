@@ -7,7 +7,7 @@
         <div class="grid grid-cols-2 gap-4">
             <div v-for="filter in filterList" :key="filter.type"
                 class="relative group cursor-pointer bg-[#2a2a2a] hover:bg-[#3a3a3a] rounded-lg p-4 flex flex-col items-center"
-                draggable="true" @dragstart="handleDragStart($event, filter)">
+                @click="handleAddFilter(filter)" draggable="true" @dragstart="handleDragStart($event, filter)">
                 <div class="preview-box h-8 mb-2">
                     <img :src="previewImage" class="h-full object-contain" :style="getFilterStyle(filter.type)" />
                 </div>
@@ -25,13 +25,16 @@
 </template>
 
 <script setup lang="ts">
+import { v4 } from 'uuid'
 import { useTrackStore } from '@/store/modules/track'
-import type { FilterType } from '@/types/track'
+import type { FilterType, FilterTrackClip, TrackClip } from '@/types/track'
 import { Plus } from '@element-plus/icons-vue'
 
 const trackStore = useTrackStore()
 // 预览图片
 const previewImage = '/preview.jpg'
+
+const addClip = inject('addClip') as ((clip: TrackClip, createNewTrack?: boolean) => void) | undefined
 
 // 滤镜列表
 const filterList = [
@@ -65,20 +68,40 @@ const handleDragStart = (event: DragEvent, filter: { type: FilterType; name: str
     if (!event.dataTransfer) return
 
     // 创建新的滤镜片段
-    const newClip = {
-        type: 'filter' as const,
+    const newClip: FilterTrackClip = {
+        id: v4(),
+        type: 'filter',
         filterType: filter.type,
         name: filter.name,
         intensity: 100,
-        duration: 5, // 默认持续5秒
+        duration: 5,
         startTime: 0,
-        endTime: 5
+        endTime: 5,
+        originalDuration: 5
     }
 
     // 设置拖拽数据
     event.dataTransfer.setData('application/json', JSON.stringify(newClip))
     trackStore.setDragData(newClip)
     event.dataTransfer.effectAllowed = 'copy'
+}
+
+// 处理添加滤镜
+const handleAddFilter = (filter: { type: FilterType; name: string }) => {
+    // 创建新的滤镜片段
+    const newClip: FilterTrackClip = {
+        id: v4(),
+        type: 'filter',
+        filterType: filter.type,
+        name: filter.name,
+        intensity: 100,
+        duration: 5,
+        startTime: 0,
+        endTime: 5,
+        originalDuration: 5
+    }
+
+    addClip?.(newClip, true)
 }
 </script>
 

@@ -15,7 +15,6 @@
 
 	function refreshRem() {
 		let rem = 16
-		console.log(document.documentElement.clientWidth, designWidth, maxWidth, minWidth)
 		if (document.documentElement.clientWidth > minWidth) {
 			var width = docEl.getBoundingClientRect().width;
 			maxWidth = maxWidth || 540;

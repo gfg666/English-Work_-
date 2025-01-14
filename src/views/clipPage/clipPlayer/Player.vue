@@ -70,6 +70,7 @@ import { ElMessageBox, ElMessage } from 'element-plus';
 import type { ElMessageBoxOptions } from 'element-plus';
 import { nextTick } from 'vue';
 import { FilterClip } from '@/components/av-cliper/clips/filter-clip';
+import * as PIXI from 'pixi.js';
 
 // Props & Emits
 const props = defineProps<{
@@ -85,7 +86,7 @@ const trackStore = useTrackStore()
 const injectActiveClip = inject('activeClip') as ((id: string) => void) | undefined
 
 // 状态变量
-const loading = ref(true)
+const loading = ref(false)
 const isPlaying = ref(false)
 const volume = ref(100)
 const isMuted = ref(false)
@@ -123,6 +124,11 @@ const handlePlay = (isPlay: boolean) => {
         cvs.pause()
         isPlaying.value = false
     }
+}
+ 
+const handleStopPlay = () => {
+    cvs.pause()
+    isPlaying.value = false
 }
 
 const prevFrame = () => {
@@ -371,8 +377,10 @@ const initClip = async (clip: TrackClip) => {
 // 应用视频效果
 const applyVideoEffect = async (frame: VideoFrame, targetClip: TrackClip): Promise<VideoFrame> => {
     if (!frame) return null
+
     const displayWidth = frame.displayWidth
     const displayHeight = frame.displayHeight
+
     // 查找当前时间点生效的滤镜
     const activeFilters = props.tracks
         .flatMap(track => track.clips)
@@ -384,106 +392,70 @@ const applyVideoEffect = async (frame: VideoFrame, targetClip: TrackClip): Promi
 
     if (!activeFilters.length) return frame
 
-    // 创建离屏画布
-    const canvas = new OffscreenCanvas(displayWidth, displayHeight)
-    const ctx = canvas.getContext('2d')
-    if (!ctx) return frame
+    // 创建 PIXI Application
+    const app = new PIXI.Application({
+        width: displayWidth,
+        height: displayHeight,
+        backgroundAlpha: 0
+    })
 
-    // 将视频帧绘制到画布
-    ctx.drawImage(frame, 0, 0)
-
-    // 获取像素数据
-    const imageData = ctx.getImageData(0, 0, displayWidth, displayHeight)
-    frame.close()
-    const pixels = imageData.data
+    // 创建视频纹理
+    const videoTexture = PIXI.Texture.from(frame)
+    const sprite = PIXI.Sprite.from(videoTexture)
+    app.stage.addChild(sprite)
 
     // 按顺序应用滤镜
+    const filters: PIXI.Filter[] = []
     for (const filter of activeFilters) {
-        // 将0-100的强度值转换为0-1
         const intensity = filter.intensity / 100
 
         switch (filter.filterType) {
-            case 'grayscale':
-                for (let i = 0; i < pixels.length; i += 4) {
-                    const avg = (pixels[i] + pixels[i + 1] + pixels[i + 2]) / 3
-                    const original = [pixels[i], pixels[i + 1], pixels[i + 2]]
-                    pixels[i] = original[0] * (1 - intensity) + avg * intensity
-                    pixels[i + 1] = original[1] * (1 - intensity) + avg * intensity
-                    pixels[i + 2] = original[2] * (1 - intensity) + avg * intensity
-                }
+            case 'grayscale': {
+                const colorMatrix = new PIXI.ColorMatrixFilter()
+                colorMatrix.grayscale(intensity, false)
+                filters.push(colorMatrix)
                 break
-
-            case 'sepia':
-                for (let i = 0; i < pixels.length; i += 4) {
-                    const r = pixels[i]
-                    const g = pixels[i + 1]
-                    const b = pixels[i + 2]
-                    const sepiaR = Math.min(255, (r * 0.393 + g * 0.769 + b * 0.189))
-                    const sepiaG = Math.min(255, (r * 0.349 + g * 0.686 + b * 0.168))
-                    const sepiaB = Math.min(255, (r * 0.272 + g * 0.534 + b * 0.131))
-                    pixels[i] = r * (1 - intensity) + sepiaR * intensity
-                    pixels[i + 1] = g * (1 - intensity) + sepiaG * intensity
-                    pixels[i + 2] = b * (1 - intensity) + sepiaB * intensity
-                }
+            }
+            case 'sepia': {
+                const colorMatrix = new PIXI.ColorMatrixFilter()
+                colorMatrix.sepia(false)
+                filters.push(colorMatrix)
                 break
-
-            case 'invert':
-                for (let i = 0; i < pixels.length; i += 4) {
-                    const original = [pixels[i], pixels[i + 1], pixels[i + 2]]
-                    pixels[i] = original[0] * (1 - intensity) + (255 - original[0]) * intensity
-                    pixels[i + 1] = original[1] * (1 - intensity) + (255 - original[1]) * intensity
-                    pixels[i + 2] = original[2] * (1 - intensity) + (255 - original[2]) * intensity
-                }
+            }
+            case 'invert': {
+                const colorMatrix = new PIXI.ColorMatrixFilter()
+                colorMatrix.negative(false)
+                filters.push(colorMatrix)
                 break
-
-            case 'brightness':
-                const factor = 1 + intensity
-                for (let i = 0; i < pixels.length; i += 4) {
-                    const original = [pixels[i], pixels[i + 1], pixels[i + 2]]
-                    pixels[i] = Math.min(255, original[0] * factor)
-                    pixels[i + 1] = Math.min(255, original[1] * factor)
-                    pixels[i + 2] = Math.min(255, original[2] * factor)
-                }
+            }
+            case 'brightness': {
+                const brightnessFilter = new PIXI.ColorMatrixFilter()
+                brightnessFilter.brightness(1 + intensity, false)
+                filters.push(brightnessFilter)
                 break
-
-            case 'blur':
-                const radius = Math.floor(intensity * 10) // 最大模糊半径为10像素
-                const tempData = new Uint8ClampedArray(pixels)
-                for (let y = 0; y < displayHeight; y++) {
-                    for (let x = 0; x < displayWidth; x++) {
-                        let r = 0, g = 0, b = 0, a = 0, count = 0
-                        for (let dy = -radius; dy <= radius; dy++) {
-                            for (let dx = -radius; dx <= radius; dx++) {
-                                const px = x + dx
-                                const py = y + dy
-                                if (px >= 0 && px < displayWidth && py >= 0 && py < displayHeight) {
-                                    const i = (py * displayWidth + px) * 4
-                                    r += tempData[i]
-                                    g += tempData[i + 1]
-                                    b += tempData[i + 2]
-                                    a += tempData[i + 3]
-                                    count++
-                                }
-                            }
-                        }
-                        const i = (y * displayWidth + x) * 4
-                        pixels[i] = r / count
-                        pixels[i + 1] = g / count
-                        pixels[i + 2] = b / count
-                        pixels[i + 3] = a / count
-                    }
-                }
+            }
+            case 'blur': {
+                const blurFilter = new PIXI.BlurFilter()
+                blurFilter.blur = intensity * 10
+                filters.push(blurFilter)
                 break
+            }
         }
     }
-
-    // 更新画布
-    ctx.putImageData(imageData, 0, 0)
+    console.log()
+    sprite.filters = filters
+    // 清理资源
+    const timestamp = frame.timestamp
+    const duration = frame.duration
 
     // 创建新的视频帧
-    return new VideoFrame(canvas, {
-        timestamp: frame.timestamp,
-        duration: frame.duration,
+    const canvas = app.renderer.extract.canvas(app.stage)
+    app.destroy(true)
+    videoTexture.destroy(true)
+    frame.close()
+    return new VideoFrame(canvas as HTMLCanvasElement, {
+        timestamp: timestamp,
+        duration: duration,
         displayWidth: displayWidth,
         displayHeight: displayHeight
     })
@@ -513,6 +485,16 @@ const updateClip = async (clip: TrackClip, type: 'default' | 'resize' | 'delete'
     const spr = sprMap.get(clip.id)
 
     if (type === 'delete') {
+        if (clip.type === 'filter') {
+            props.tracks.forEach(track => {
+                track.clips.forEach(clipItem => {
+                    if (props.currentTime >= clipItem.startTime && props.currentTime < (clipItem.startTime + clipItem.duration)) {
+                        const sprItem = sprMap.get(clipItem.id)
+                        sprItem.preFrame((props.currentTime) * 1e6 - sprItem.time.offset)
+                    }
+                })
+            })
+        }
         cvs?.removeSprite(spr)
         sprMap.delete(clip.id)
         return
@@ -687,6 +669,9 @@ onUnmounted(() => {
 
 // 监听器
 watch(() => initCount.value, (newCount) => {
+    if (initTotal.value !== 0) {
+        loading.value = true
+    }
     if (newCount === initTotal.value) {
         loading.value = false
         cvs?.previewFrame(props.currentTime * 1e6)
@@ -699,7 +684,7 @@ watch(() => initCount.value, (newCount) => {
             emit('captureImage', dataUrl)
         }, 500)
     }
-})
+}, { immediate: true })
 
 watch(() => props.currentTime, (newTime) => {
     if (!isPlaying.value) {
@@ -709,6 +694,7 @@ watch(() => props.currentTime, (newTime) => {
 
 // 导出方法
 defineExpose({
+    handleStopPlay,
     refreshPlayer,
     addClip,
     activeClip,

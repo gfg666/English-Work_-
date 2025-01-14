@@ -29,9 +29,10 @@
             <!-- 底部轨道编辑区域 -->
             <div id="bottom" class="bg-[#201f20]">
                 <ClipTrack ref="clipTrackRef" v-model:tracks="tracks" :maxTracksNum="MAX_TRACKS_NUM"
-                    :currentTime="currentTime" :timelineDuration="timelineDuration" @timeUpdate="timeUpdate"
-                    @add-clip="addPlayerClip" @refreshPlayer="refreshPlayer" @delete-empty-track="deleteEmptyTrack"
-                    @activeClip="handleActiveClip" @handle-export="handleExport" />
+                    :currentTime="currentTime" :timelineDuration="timelineDuration" @stopPlay="handleStopPlay"
+                    @timeUpdate="timeUpdate" @add-clip="addPlayerClip" @refreshPlayer="refreshPlayer"
+                    @delete-empty-track="deleteEmptyTrack" @activeClip="handleActiveClip"
+                    @handle-export="handleExport" />
             </div>
         </div>
     </div>
@@ -330,6 +331,10 @@ const addPlayerClip = (clip: TrackClip) => {
 // 删除没有clip的轨道
 const deleteEmptyTrack = () => {
     tracks.value = tracks.value.filter(track => track.clips.length > 0)
+}
+
+const handleStopPlay = () => {
+    playerRef.value?.handleStopPlay()
 }
 
 const refreshPlayer = () => {

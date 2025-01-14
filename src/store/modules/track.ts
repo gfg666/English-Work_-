@@ -134,7 +134,6 @@ export const useTrackStore = defineStore("track", {
         .where("projectId")
         .equals(projectId)
         .count();
-      console.log("getCanRedo", projectId, count, this.currentHistoryIndex);
       return this.currentHistoryIndex < count - 1;
     },
     async clearHistory(projectId: number) {
