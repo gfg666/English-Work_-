@@ -303,6 +303,7 @@ const initClip = async (clip: TrackClip) => {
         case 'filter': {
             const filterClip = new FilterClip(Number(clip.duration) * 1e6)
             spr = new VisibleSprite(filterClip)
+            spr.visible = false
             break
         }
     }
