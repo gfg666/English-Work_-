@@ -297,7 +297,6 @@ const initClip = async (clip: TrackClip) => {
                 })
             })
             spr = new VisibleSprite(textClip)
-            spr.visible = false
             break
         }
         case 'filter': {

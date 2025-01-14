@@ -8,7 +8,7 @@
         @dragover.prevent="handleDragOver" @dragleave.prevent="handleDragLeave" @mousedown="handleBackgroundClick"
         @keydown="handleKeyDown" tabindex="0">
         <!-- 轨道列表 -->
-        <div v-for="(track, index) in tracks" :key="track.id" class="relative h-15 my-3 bg-[#252525]"
+        <div v-for="(track, index) in tracks" :key="track.id" class="relative h-12 my-3 bg-[#252525]"
             :data-track="track.id" @dragenter.prevent="handleTrackDragEnter(index)"
             @dragleave.prevent="handleTrackDragLeave(index)">
             <!-- 轨道内的片段 -->
@@ -34,14 +34,14 @@
 
                 <!-- 左侧调整把手 -->
                 <div v-if="clip.selected || (hoveredClip && hoveredClip.id === clip.id) || (selectedClip && selectedClip.id === clip.id)"
-                    class="absolute left-[1.25px] top-[0.285px] bottom-0 flex items-center justify-center w-3 h-[98%] bg-[#d4d4d4] rounded-l-[0.75rem] cursor-w-resize hover:bg-[#a0a0a0] z-10"
+                    class="absolute left-[1.25px] top-[0.2px] bottom-0 flex items-center justify-center w-3 h-[98%] bg-[#d4d4d4] rounded-l-[0.75rem] cursor-w-resize hover:bg-[#a0a0a0] z-10"
                     @mousedown.stop="startResize($event, clip, 'left')">
                     <div class="w-1 h-[80%] bg-[#646464]"></div>
                 </div>
 
                 <!-- 右侧调整把手 -->
                 <div v-if="clip.selected || (hoveredClip && hoveredClip.id === clip.id) || (selectedClip && selectedClip.id === clip.id)"
-                    class="absolute right-[1.25px] top-[0.285px] bottom-0 flex items-center justify-center w-3 h-[98%] bg-[#d4d4d4] rounded-r-[0.75rem] cursor-w-resize hover:bg-[#a0a0a0] z-10"
+                    class="absolute right-[1.25px] top-[0.2px] bottom-0 flex items-center justify-center w-3 h-[98%] bg-[#d4d4d4] rounded-r-[0.75rem] cursor-w-resize hover:bg-[#a0a0a0] z-10"
                     @mousedown.stop="startResize($event, clip, 'right')">
                     <div class="w-1 h-[80%] bg-[#646464]"></div>
                 </div>
