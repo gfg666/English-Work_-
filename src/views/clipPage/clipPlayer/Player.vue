@@ -125,7 +125,7 @@ const handlePlay = (isPlay: boolean) => {
         isPlaying.value = false
     }
 }
- 
+
 const handleStopPlay = () => {
     cvs.pause()
     isPlaying.value = false
@@ -672,7 +672,7 @@ watch(() => initCount.value, (newCount) => {
     if (initTotal.value !== 0) {
         loading.value = true
     }
-    if (newCount === initTotal.value) {
+    if (newCount >= initTotal.value) {
         loading.value = false
         cvs?.previewFrame(props.currentTime * 1e6)
         for (const clip of props.tracks.flatMap(track => track.clips)) {
