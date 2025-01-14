@@ -4,9 +4,20 @@
 
 /**
  * 媒体类型枚举
- * 定义了支持的媒体类型：视频、音频、图片、文字和贴纸
+ * 定义了支持的媒体类型：视频、音频、图片、文字和滤镜
  */
-export type MediaType = "video" | "audio" | "image" | "text" | "sticker";
+export type MediaType = "video" | "audio" | "image" | "text" | "filter";
+
+/**
+ * 滤镜类型枚举
+ * 定义了支持的滤镜效果类型
+ */
+export type FilterType =
+  | "grayscale"
+  | "invert"
+  | "brightness"
+  | "sepia"
+  | "blur";
 
 /**
  * 轨道片段接口
@@ -39,6 +50,8 @@ export type MediaType = "video" | "audio" | "image" | "text" | "sticker";
  * @property {number} [sourceEndTime] - 原始素材结束时间
  * @property {number} [originalDuration] - 原始素材时长
  * @property {number} [zIndex] - 层级顺序
+ * @property {FilterType} [filterType] - 滤镜类型
+ * @property {number} [intensity] - 滤镜强度（0-1）
  */
 export interface TrackClip {
   id?: string;
@@ -67,6 +80,18 @@ export interface TrackClip {
   sourceEndTime?: number;
   originalDuration?: number;
   zIndex?: number;
+  filterType?: FilterType;
+  intensity?: number;
+}
+
+/**
+ * 滤镜片段接口
+ * 定义了滤镜片段的特有属性
+ */
+export interface FilterTrackClip extends TrackClip {
+  type: "filter";
+  filterType: FilterType;
+  intensity: number;
 }
 
 /**

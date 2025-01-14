@@ -23,7 +23,7 @@
                 </div>
                 <!-- 右侧属性面板 -->
                 <div id="topRight" class="w-1/5 bg-[#303030]">
-                    <ClipProperties :clip="selectedClip" />
+                    <ClipProperties :clip="selectedClip" @update="updateClipProps" />
                 </div>
             </div>
             <!-- 底部轨道编辑区域 -->
@@ -46,7 +46,7 @@ import { useTrackStore } from '@/store/modules/track'
 import ClipMenu from './clipMenu/clipMenu.vue'
 import Split from 'split.js'
 import ClipTrack from './clipTrack/clipTrack.vue'
-import ClipProperties from './components/ClipProperties.vue'
+import ClipProperties from './ClipProperties/ClipProperties.vue'
 import { onMounted, provide, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { db } from '@/db/db'

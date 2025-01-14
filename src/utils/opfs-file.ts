@@ -80,10 +80,6 @@ export async function getFileUrl(url: string): Promise<string> {
       if (fileExist) {
         const blob = await fileToBlob(fileObject);
         const blobUrl = URL.createObjectURL(blob);
-        console.log(
-          await fileObject.getSize(),
-          await fileObject.getOriginFile()
-        );
         resolve(blobUrl);
       }
     } catch (error) {

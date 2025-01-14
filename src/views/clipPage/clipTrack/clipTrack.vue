@@ -280,6 +280,7 @@ const resetClipsPosition = () => {
 
 // 修改 handleDrop 函数
 const handleDrop = async (e: DragEvent) => {
+    console.log('handleDrop')
     e.preventDefault()
     const rect = (e.currentTarget as HTMLElement).getBoundingClientRect()
     const relativeX = e.clientX - rect.left
@@ -288,7 +289,6 @@ const handleDrop = async (e: DragEvent) => {
     // 从 store 中获取拖拽数据
     const mediaData = trackStore.getDragData
     if (!mediaData) return
-
     const newClip = {
         ...mediaData,
         id: v4(),
@@ -340,6 +340,7 @@ const handleDrop = async (e: DragEvent) => {
         currentTrack.clips.push(newClip)
         currentTrack.clips.sort((a, b) => a.startTime - b.startTime)
     } else if (props.tracks.length < props.maxTracksNum) {
+        console.log('create new track')
         // 如果没有选中轨道且轨道数量未达到上限，创建新轨道
         props.tracks.push({
             id: v4(),

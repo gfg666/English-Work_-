@@ -40,7 +40,7 @@
                 </button>
 
                 <!-- 下一帧按钮：逐帧前进 -->
-                <button class="text-white hover:text-purple-500 transition-colors" @click="prevFrame">
+                <button class="text-white hover:text-purple-500 transition-colors" @click="nextFrame">
                     <Icon :icon="'fa-step-forward'"></Icon>
                 </button>
             </div>
@@ -59,7 +59,7 @@
 <script setup lang="ts">
 import { AVCanvas } from '@webav/av-canvas';
 import { Log } from '@webav/internal-utils';
-import { Track, TrackClip } from '@/types/track';
+import { Track, TrackClip, FilterTrackClip } from '@/types/track';
 import { getFile } from '@/utils/opfs-file';
 import { MP4Clip, AudioClip, VisibleSprite, ImgClip } from '@webav/av-cliper';
 import { useTrackStore } from '@/store/modules/track';
@@ -69,6 +69,7 @@ import { TextClip } from '@/components/av-cliper/clips/text-clip';
 import { ElMessageBox, ElMessage } from 'element-plus';
 import type { ElMessageBoxOptions } from 'element-plus';
 import { nextTick } from 'vue';
+import { FilterClip } from '@/components/av-cliper/clips/filter-clip';
 
 // Props & Emits
 const props = defineProps<{
@@ -249,6 +250,8 @@ const initClip = async (clip: TrackClip) => {
                     list.push(audio.map((value) => value = value * (clip.volume / 100)))
                 }
                 tickRet.audio = list
+                // 处理视频画面
+                tickRet.video = await applyVideoEffect(tickRet.video, clip)
                 return tickRet
             }
             if (Number(clip.sourceStartTime) > 0) {
@@ -294,9 +297,20 @@ const initClip = async (clip: TrackClip) => {
                 })
             })
             spr = new VisibleSprite(textClip)
+            spr.visible = false
+            break
+        }
+        case 'filter': {
+            const filterClip = new FilterClip(Number(clip.duration) * 1e6)
+            spr = new VisibleSprite(filterClip)
             break
         }
     }
+    // 设置更新订阅
+    trackStore.unsubscribeFromClipUpdates(clip.id)
+    trackStore.subscribeToClipUpdates(clip.id!, async (updatedClip, type) => {
+        updateClip(updatedClip, type)
+    })
 
     if (!spr) return
 
@@ -352,13 +366,127 @@ const initClip = async (clip: TrackClip) => {
             emit('updateClipProps', clip.id, event)
         }
     })
+}
 
-    // 设置更新订阅
-    trackStore.unsubscribeFromClipUpdates(clip.id)
-    trackStore.subscribeToClipUpdates(clip.id!, async (updatedClip, type) => {
-        updateClip(updatedClip, type)
+// 应用视频效果
+const applyVideoEffect = async (frame: VideoFrame, targetClip: TrackClip): Promise<VideoFrame> => {
+    if (!frame) return null
+    const displayWidth = frame.displayWidth
+    const displayHeight = frame.displayHeight
+    // 查找当前时间点生效的滤镜
+    const activeFilters = props.tracks
+        .flatMap(track => track.clips)
+        .filter(clip =>
+            clip.type === 'filter' &&
+            props.currentTime >= clip.startTime &&
+            props.currentTime < (clip.startTime + clip.duration)
+        ) as FilterTrackClip[]
+
+    if (!activeFilters.length) return frame
+
+    // 创建离屏画布
+    const canvas = new OffscreenCanvas(displayWidth, displayHeight)
+    const ctx = canvas.getContext('2d')
+    if (!ctx) return frame
+
+    // 将视频帧绘制到画布
+    ctx.drawImage(frame, 0, 0)
+
+    // 获取像素数据
+    const imageData = ctx.getImageData(0, 0, displayWidth, displayHeight)
+    frame.close()
+    const pixels = imageData.data
+
+    // 按顺序应用滤镜
+    for (const filter of activeFilters) {
+        // 将0-100的强度值转换为0-1
+        const intensity = filter.intensity / 100
+
+        switch (filter.filterType) {
+            case 'grayscale':
+                for (let i = 0; i < pixels.length; i += 4) {
+                    const avg = (pixels[i] + pixels[i + 1] + pixels[i + 2]) / 3
+                    const original = [pixels[i], pixels[i + 1], pixels[i + 2]]
+                    pixels[i] = original[0] * (1 - intensity) + avg * intensity
+                    pixels[i + 1] = original[1] * (1 - intensity) + avg * intensity
+                    pixels[i + 2] = original[2] * (1 - intensity) + avg * intensity
+                }
+                break
+
+            case 'sepia':
+                for (let i = 0; i < pixels.length; i += 4) {
+                    const r = pixels[i]
+                    const g = pixels[i + 1]
+                    const b = pixels[i + 2]
+                    const sepiaR = Math.min(255, (r * 0.393 + g * 0.769 + b * 0.189))
+                    const sepiaG = Math.min(255, (r * 0.349 + g * 0.686 + b * 0.168))
+                    const sepiaB = Math.min(255, (r * 0.272 + g * 0.534 + b * 0.131))
+                    pixels[i] = r * (1 - intensity) + sepiaR * intensity
+                    pixels[i + 1] = g * (1 - intensity) + sepiaG * intensity
+                    pixels[i + 2] = b * (1 - intensity) + sepiaB * intensity
+                }
+                break
+
+            case 'invert':
+                for (let i = 0; i < pixels.length; i += 4) {
+                    const original = [pixels[i], pixels[i + 1], pixels[i + 2]]
+                    pixels[i] = original[0] * (1 - intensity) + (255 - original[0]) * intensity
+                    pixels[i + 1] = original[1] * (1 - intensity) + (255 - original[1]) * intensity
+                    pixels[i + 2] = original[2] * (1 - intensity) + (255 - original[2]) * intensity
+                }
+                break
+
+            case 'brightness':
+                const factor = 1 + intensity
+                for (let i = 0; i < pixels.length; i += 4) {
+                    const original = [pixels[i], pixels[i + 1], pixels[i + 2]]
+                    pixels[i] = Math.min(255, original[0] * factor)
+                    pixels[i + 1] = Math.min(255, original[1] * factor)
+                    pixels[i + 2] = Math.min(255, original[2] * factor)
+                }
+                break
+
+            case 'blur':
+                const radius = Math.floor(intensity * 10) // 最大模糊半径为10像素
+                const tempData = new Uint8ClampedArray(pixels)
+                for (let y = 0; y < displayHeight; y++) {
+                    for (let x = 0; x < displayWidth; x++) {
+                        let r = 0, g = 0, b = 0, a = 0, count = 0
+                        for (let dy = -radius; dy <= radius; dy++) {
+                            for (let dx = -radius; dx <= radius; dx++) {
+                                const px = x + dx
+                                const py = y + dy
+                                if (px >= 0 && px < displayWidth && py >= 0 && py < displayHeight) {
+                                    const i = (py * displayWidth + px) * 4
+                                    r += tempData[i]
+                                    g += tempData[i + 1]
+                                    b += tempData[i + 2]
+                                    a += tempData[i + 3]
+                                    count++
+                                }
+                            }
+                        }
+                        const i = (y * displayWidth + x) * 4
+                        pixels[i] = r / count
+                        pixels[i + 1] = g / count
+                        pixels[i + 2] = b / count
+                        pixels[i + 3] = a / count
+                    }
+                }
+                break
+        }
+    }
+
+    // 更新画布
+    ctx.putImageData(imageData, 0, 0)
+
+    // 创建新的视频帧
+    return new VideoFrame(canvas, {
+        timestamp: frame.timestamp,
+        duration: frame.duration,
+        displayWidth: displayWidth,
+        displayHeight: displayHeight
     })
-
 }
 
 // 更新相关方法
@@ -380,7 +508,6 @@ const updateSpritesZIndex = () => {
 
 const updateClip = async (clip: TrackClip, type: 'default' | 'resize' | 'delete' = 'default') => {
     handlePlay(false)
-    console.log('updateClip', clip)
     if (!sprMap.has(clip.id)) return
 
     const spr = sprMap.get(clip.id)
@@ -410,6 +537,18 @@ const updateClip = async (clip: TrackClip, type: 'default' | 'resize' | 'delete'
         spr.rect.w = clip.w
         spr.rect.h = clip.h
         spr.preFrame(props.currentTime * 1e6)
+    } else if (clip.type === 'filter') {
+        props.tracks.forEach(track => {
+            track.clips.forEach(clipItem => {
+                if ((clipItem.type === 'video' || clipItem.type === 'image') && clipItem.startTime <= props.currentTime && clipItem.endTime >= props.currentTime) {
+                    const sprItem = sprMap.get(clipItem.id)
+                    if (sprItem) {
+
+                        sprItem.preFrame((props.currentTime) * 1e6 - sprItem.time.offset)
+                    }
+                }
+            })
+        })
     } else if (clip.type !== 'audio') {
         spr.rect.x = clip.x
         spr.rect.y = clip.y
@@ -417,6 +556,8 @@ const updateClip = async (clip: TrackClip, type: 'default' | 'resize' | 'delete'
         spr.rect.h = clip.h
         spr.rect.angle = clip.angle
     }
+
+    cvs?.previewFrame(props.currentTime * 1e6)
 }
 
 const refreshPlayer = () => {

@@ -42,15 +42,30 @@
 
         <!-- 文字片段 -->
         <template v-else-if="clip.type === 'text'">
-            <div class="mt-1 text-bigger pl-4 text-white whitespace-nowrap overflow-hidden text-ellipsis w-full">
-                {{ clip.textConfig.content }}
+            <!-- 类型标识图标 -->
+            <div
+                class="flex items-center text-bigger text-white whitespace-nowrap overflow-hidden text-ellipsis w-full">
+                <Icon icon="material-symbols-light:text-fields" class="w-6 h-6 absolute left-1 text-white">
+                </Icon>
+                <div class="pl-6.5">
+                    {{ clip.textConfig.content }}
+                </div>
             </div>
         </template>
 
-        <!-- 贴图片段 -->
-        <template v-else-if="clip.type === 'sticker'">
-            <div class="mt-1 text-xs text-white whitespace-nowrap overflow-hidden text-ellipsis w-full">
-                {{ clip.name }}
+        <!-- 滤镜片段 -->
+        <template v-else-if="clip.type === 'filter'">
+            <div
+                class="flex items-center text-bigger text-white whitespace-nowrap overflow-hidden text-ellipsis w-full">
+                <Icon icon="material-symbols-light:magnify-fullscreen-outline-rounded"
+                    class="w-6 h-6 absolute left-1 text-white">
+                </Icon>
+                <div class="pl-6.5">
+                    <span>{{ getFilterName(clip.filterType) }}</span>
+                    <span v-if="clip.intensity !== undefined">
+                        {{ Math.round(clip.intensity) }}%
+                    </span>
+                </div>
             </div>
         </template>
     </div>
@@ -58,7 +73,8 @@
 
 <script setup lang="ts">
 import { ref, watch, computed, onMounted, nextTick } from 'vue'
-import type { TrackClip } from '@/types/track'
+import type { TrackClip, FilterType } from '@/types/track'
+import { Icon } from '@iconify/vue';
 
 interface Thumbnail {
     timestamp: number
@@ -196,6 +212,19 @@ const drawWaveform = () => {
     } catch (error) {
         console.error('Error drawing waveform:', error)
     }
+}
+
+// 滤镜相关方法
+const getFilterName = (filterType?: FilterType) => {
+    if (!filterType) return '未知滤镜'
+    const filterNames: Record<FilterType, string> = {
+        grayscale: '灰度',
+        invert: '反色',
+        brightness: '亮度',
+        sepia: '复古',
+        blur: '模糊'
+    }
+    return filterNames[filterType]
 }
 
 // 监听器

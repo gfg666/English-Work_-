@@ -20,15 +20,17 @@
                     'bg-[#6ab7ff]': clip.type === 'audio',
                     'bg-[#722ed133]': clip.type === 'image',
                     'bg-[#a85201]': clip.type === 'text',
-                    'bg-[#eb2f9633]': clip.type === 'sticker'
+                    'bg-[#f827eec2]': clip.type === 'filter'
                 }" :style="{
                     left: `${clip.startTime * frameLength}px`,
                     width: `${clip.duration * frameLength}px`
                 }" :data-clip="clip.id" @mousedown.stop="handleClipClick($event, clip, track.id)"
                 @mouseover="handleClipHover(clip)" @mouseleave="handleClipLeave(clip)">
                 <!-- 片段内容 -->
-                <track-item :clip="clip" :zoom="zoom" :frameLength="frameLength"
-                    :hovered="clip.selected || (hoveredClip && hoveredClip.id === clip.id) || (selectedClip && selectedClip.id === clip.id)" />
+                <div class="flex items-center justify-center w-full h-full relative">
+                    <track-item :clip="clip" :zoom="zoom" :frameLength="frameLength"
+                        :hovered="clip.selected || (hoveredClip && hoveredClip.id === clip.id) || (selectedClip && selectedClip.id === clip.id)" />
+                </div>
 
                 <!-- 左侧调整把手 -->
                 <div v-if="clip.selected || (hoveredClip && hoveredClip.id === clip.id) || (selectedClip && selectedClip.id === clip.id)"
