@@ -280,6 +280,10 @@ const initClip = async (clip: TrackClip) => {
                     audioClip = newStartClips[1]
                 }
             }
+            // audioClip.tickInterceptor = async (time, tickRet) => {
+            //     tickRet.audio = tickRet.audio.map((value) => value = value * (clip.volume / 100))
+            //     return tickRet
+            // }
             spr = new VisibleSprite(audioClip)
             spr.visible = false
             break
@@ -378,6 +382,12 @@ const initClip = async (clip: TrackClip) => {
     })
 }
 
+const app = new PIXI.Application({
+    width: canvasSize.value.width,
+    height: canvasSize.value.height,
+    backgroundAlpha: 0
+})
+
 // 应用视频效果
 const applyVideoEffect = async (frame: VideoFrame, targetClip: TrackClip, time: number): Promise<VideoFrame> => {
     if (!frame) return null
@@ -394,13 +404,7 @@ const applyVideoEffect = async (frame: VideoFrame, targetClip: TrackClip, time: 
         ) as FilterTrackClip[]
     if (!activeFilters.length) return frame
 
-    // 创建 PIXI Application
-    const app = new PIXI.Application({
-        width: displayWidth,
-        height: displayHeight,
-        backgroundAlpha: 0
-    })
-
+    app.stage.removeChildren()
     // 创建视频纹理
     const videoTexture = PIXI.Texture.from(frame)
     const sprite = PIXI.Sprite.from(videoTexture)
@@ -444,7 +448,6 @@ const applyVideoEffect = async (frame: VideoFrame, targetClip: TrackClip, time: 
             }
         }
     }
-    console.log()
     sprite.filters = filters
     sprite.filterArea = new PIXI.Rectangle(0, 0, displayWidth, displayHeight)
     // 清理资源
@@ -453,7 +456,7 @@ const applyVideoEffect = async (frame: VideoFrame, targetClip: TrackClip, time: 
 
     // 创建新的视频帧
     const canvas = app.renderer.extract.canvas(app.stage)
-    app.destroy(true)
+    // app.destroy(true)
     videoTexture.destroy(true)
     frame.close()
     return new VideoFrame(canvas as HTMLCanvasElement, {
