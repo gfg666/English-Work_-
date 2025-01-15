@@ -250,14 +250,14 @@ const initClip = async (clip: TrackClip) => {
         case 'video': {
             let fileObject = await getFile(clip.path)
             let mp4Clip = await new MP4Clip(await fileObject.stream())
-            mp4Clip.tickInterceptor = async (_, tickRet) => {
+            mp4Clip.tickInterceptor = async (time, tickRet) => {
                 let list = []
                 for (const audio of tickRet.audio) {
                     list.push(audio.map((value) => value = value * (clip.volume / 100)))
                 }
                 tickRet.audio = list
                 // 处理视频画面
-                tickRet.video = await applyVideoEffect(tickRet.video, clip)
+                tickRet.video = await applyVideoEffect(tickRet.video, clip, time / 1e6)
                 return tickRet
             }
             if (Number(clip.sourceStartTime) > 0) {
@@ -267,6 +267,7 @@ const initClip = async (clip: TrackClip) => {
             spr = new VisibleSprite(mp4Clip)
             break
         }
+
         case 'audio': {
             const fileObject = await getFile(clip.path)
             let audioClip = await new AudioClip(await fileObject.stream())
@@ -283,6 +284,7 @@ const initClip = async (clip: TrackClip) => {
             spr.visible = false
             break
         }
+
         case 'image': {
             const fileObject = await getFile(clip.path)
             let imgClip = null
@@ -295,6 +297,7 @@ const initClip = async (clip: TrackClip) => {
             spr = new VisibleSprite(imgClip)
             break
         }
+
         case 'text': {
             const textClip = new TextClip(clip.textConfig, (width, height) => {
                 emit('updateClipProps', clip.id, {
@@ -305,6 +308,7 @@ const initClip = async (clip: TrackClip) => {
             spr = new VisibleSprite(textClip)
             break
         }
+
         case 'filter': {
             const filterClip = new FilterClip(Number(clip.duration) * 1e6)
             spr = new VisibleSprite(filterClip)
@@ -375,9 +379,8 @@ const initClip = async (clip: TrackClip) => {
 }
 
 // 应用视频效果
-const applyVideoEffect = async (frame: VideoFrame, targetClip: TrackClip): Promise<VideoFrame> => {
+const applyVideoEffect = async (frame: VideoFrame, targetClip: TrackClip, time: number): Promise<VideoFrame> => {
     if (!frame) return null
-
     const displayWidth = frame.displayWidth
     const displayHeight = frame.displayHeight
 
@@ -386,10 +389,9 @@ const applyVideoEffect = async (frame: VideoFrame, targetClip: TrackClip): Promi
         .flatMap(track => track.clips)
         .filter(clip =>
             clip.type === 'filter' &&
-            props.currentTime >= clip.startTime &&
-            props.currentTime < (clip.startTime + clip.duration)
+            time + targetClip.startTime >= clip.startTime &&
+            time + targetClip.startTime < (clip.startTime + clip.duration)
         ) as FilterTrackClip[]
-
     if (!activeFilters.length) return frame
 
     // 创建 PIXI Application
@@ -444,6 +446,7 @@ const applyVideoEffect = async (frame: VideoFrame, targetClip: TrackClip): Promi
     }
     console.log()
     sprite.filters = filters
+    sprite.filterArea = new PIXI.Rectangle(0, 0, displayWidth, displayHeight)
     // 清理资源
     const timestamp = frame.timestamp
     const duration = frame.duration
@@ -551,6 +554,8 @@ const refreshPlayer = () => {
     })
 }
 
+const exporting = ref(false)
+const outputRenderTime = ref(0)
 // 导出相关
 const handleExport = async () => {
     const com = await cvs?.createCombinator()
@@ -568,6 +573,8 @@ const handleExport = async () => {
             beforeClose: (action, instance, done) => {
                 if (action === 'cancel') {
                     com?.destroy()
+                    exporting.value = false
+                    outputRenderTime.value = 0
                     done()
                 }
             }
@@ -584,6 +591,10 @@ const handleExport = async () => {
 
         await nextTick()
 
+        com.on('renderTime', (time: number) => {
+            outputRenderTime.value = time
+        })
+
         com.on('OutputProgress', (prog: number) => {
             const percentage = Math.round(prog * 100)
             const messageEl = document.querySelector('.el-message-box__message')
@@ -598,6 +609,8 @@ const handleExport = async () => {
                 `
 
                 if (prog === 1) {
+                    exporting.value = false
+                    outputRenderTime.value = 0
                     const cancelBtn = document.querySelector('.el-message-box__cancel') as HTMLElement
                     if (cancelBtn) {
                         cancelBtn.style.display = 'none'
@@ -616,6 +629,7 @@ const handleExport = async () => {
                 }
             }
         })
+        exporting.value = true
         await com?.output().pipeTo(await createFileWriter())
     } catch (error: any) {
         ElMessageBox.close()

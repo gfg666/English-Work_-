@@ -22,6 +22,7 @@
    - 视频帧级精确定位
    - 支持动态图片（GIF）
    - 支持视频片段的音量调节
+   - 支持视频片段的滤镜
 
 3. 文字编辑功能
    - 丰富的文字样式设置
@@ -59,7 +60,7 @@
 
 1. 浏览器兼容性
    - 仅支持本地部署或HTTPS协议
-   - 仅支持 Chrome 94+和 Edge 94+ 版本
+   - 仅支持 Chrome 102+和 Edge 102+版本
    - 建议使用最新版 Chrome或 Edge 以获得最佳体验
 
 2. 存储限制
@@ -79,6 +80,7 @@
 - Element Plus
 - WebCodecs API
 - WebAV
+- PIXI.js (v7.4.2)
 - IndexedDB
 - Tailwind CSS
 
