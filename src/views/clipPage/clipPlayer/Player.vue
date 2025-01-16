@@ -58,19 +58,17 @@
 
 <script setup lang="ts">
 import { AVCanvas } from '@webav/av-canvas';
-import { Log } from '@webav/internal-utils';
-import { Track, TrackClip, FilterTrackClip } from '@/types/track';
-import { getFile } from '@/utils/opfs-file';
 import { MP4Clip, AudioClip, VisibleSprite, ImgClip } from '@webav/av-cliper';
+import { Log } from '@webav/internal-utils';
 import { useTrackStore } from '@/store/modules/track';
-import { Icon } from '@iconify/vue';
-import { createFileWriter } from '@/utils/opfs-file';
 import { TextClip } from '@/components/av-cliper/clips/text-clip';
+import { FilterClip } from '@/components/av-cliper/clips/filter-clip';
 import { ElMessageBox, ElMessage } from 'element-plus';
 import type { ElMessageBoxOptions } from 'element-plus';
-import { nextTick } from 'vue';
-import { FilterClip } from '@/components/av-cliper/clips/filter-clip';
+import type { Track, TrackClip, FilterTrackClip } from '@/types/track';
+import { getFile, createFileWriter } from '@/utils/opfs-file';
 import * as PIXI from 'pixi.js';
+import { Icon } from '@iconify/vue';
 
 // Props & Emits
 const props = defineProps<{
@@ -97,13 +95,6 @@ const initCount = ref(0)
 let cvs = null
 
 // 计算属性
-const volumeIcon = computed(() => {
-    if (isMuted.value || volume.value === 0) return 'fa-volume-mute'
-    if (volume.value < 30) return 'fa:volume-off'
-    if (volume.value < 70) return 'fa-volume-down'
-    return 'fa-volume-up'
-})
-
 const canvasSize = computed(() => trackStore.getCanvasSize)
 const initTotal = computed(() => {
     let total = 0
@@ -456,7 +447,6 @@ const applyVideoEffect = async (frame: VideoFrame, targetClip: TrackClip, time: 
 
     // 创建新的视频帧
     const canvas = app.renderer.extract.canvas(app.stage)
-    // app.destroy(true)
     videoTexture.destroy(true)
     frame.close()
     return new VideoFrame(canvas as HTMLCanvasElement, {

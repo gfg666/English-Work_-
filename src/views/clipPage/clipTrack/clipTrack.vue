@@ -109,7 +109,6 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onUnmounted, computed, watch } from 'vue';
 import { Track, TrackClip } from '@/types/track';
 import TimelineRuler from './components/timelineRuler.vue'
 import TracksList from './components/tracksList.vue'
@@ -311,11 +310,7 @@ const handleDrop = async (e: DragEvent) => {
     // 根据媒体类型获取不同的数据
     if (newClip.type === 'video' || newClip.type === 'image') {
         const res = await getKeyframes(newClip)
-        if (res.type === 'video') {
-            newClip.thumbnail = res.data
-        } else if (res.type === 'image') {
-            newClip.thumbnail = [{ timestamp: 0, url: URL.createObjectURL(res.data as Blob) }]
-        }
+        newClip.thumbnail = res.data
     } else if (newClip.type === 'audio') {
         const res = await getVolume(newClip)
         if (res.type === 'audio') {

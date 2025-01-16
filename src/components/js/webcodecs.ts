@@ -26,7 +26,7 @@ export const getKeyframes = async (
           const ctx = canvas.getContext("2d");
           ctx.drawImage(video, 0, 0, video.width, video.height);
           const blob = await canvas.convertToBlob();
-          resolve({ type: "image", data: blob });
+          resolve({ type: "image", data: [{ url: URL.createObjectURL(blob), timestamp: 0 }] });
         }
       }
     } else if (val.type === "video") {

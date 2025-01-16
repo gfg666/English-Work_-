@@ -59,7 +59,7 @@ export interface TrackClip {
   isAnimateImg?: boolean;
   name: string;
   content?: string;
-  thumbnail?: { url: string; timestamp: number }[] | Blob;
+  thumbnail?: { url: string; timestamp: number }[];
   volumeData?: number[];
   textConfig?: TextConfig;
   size?: number;

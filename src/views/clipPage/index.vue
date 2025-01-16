@@ -48,15 +48,14 @@ import ClipMenu from './clipMenu/clipMenu.vue'
 import Split from 'split.js'
 import ClipTrack from './clipTrack/clipTrack.vue'
 import ClipProperties from './ClipProperties/ClipProperties.vue'
-import { onMounted, provide, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
-import { db } from '@/db/db'
+import { db, Media } from '@/db/db'
 import { Track, TrackClip } from '@/types/track'
 import { getKeyframes, getVolume } from '@/components/js/webcodecs'
 import { cloneDeep } from 'lodash'
 import { ElMessage } from 'element-plus'
 import { dataURLToBuffer } from '@/utils/opfs-file'
-import { file, write } from 'opfs-tools'
+import { write } from 'opfs-tools'
 
 /**
  * 禁用浏览器默认的缩放行为
@@ -153,17 +152,13 @@ provide('addClip', async (clip: TrackClip, createNewTrack?: boolean) => {
 
     // 获取视频关键帧或图片缩略图
     if (clip.type === 'video' || clip.type === 'image') {
-        const res = await getKeyframes(clip)
-        if (res.type === 'video') {
-            clip.thumbnail = res.data as { url: string; timestamp: number }[]
-        } else if (res.type === 'image') {
-            clip.thumbnail = [{ timestamp: 0, url: URL.createObjectURL(res.data as Blob) }]
-        }
+        const res = await getKeyframes(clip as Media)
+        clip.thumbnail = res.data as { url: string; timestamp: number }[]
     }
 
     // 获取音频波形数据
     if (clip.type === 'audio') {
-        const res = await getVolume(clip)
+        const res = await getVolume(clip as Media)
         if (res.type === 'audio') {
             clip.volumeData = res.data
         }
@@ -256,30 +251,56 @@ onMounted(async () => {
     if (project) {
         tracks.value = project.tracks
         deleteEmptyTrack()
-        tracks.value.forEach(track => {
-            track.clips.forEach(clip => {
-                if (clip.type === 'audio') {
-                    getVolume(clip).then(res => {
-                        if (res.type === 'audio') {
-                            clip.volumeData = res.data
-                        }
-                    })
-                } else if (clip.type === 'video' || clip.type === 'image') {
-                    getKeyframes(clip).then(res => {
-                        if (res.type === 'video') {
-                            clip.thumbnail = res.data as { url: string; timestamp: number }[]
-                        } else if (res.type === 'image') {
-                            clip.thumbnail = [{ timestamp: 0, url: URL.createObjectURL(res.data as Blob) }]
-                        }
-                    })
-                }
-            })
-        })
         trackStore.clearHistory(projectId)
         trackStore.saveHistoryState(projectId, tracks.value)
         refreshPlayer()
     }
 });
+onUnmounted(() => {
+    releaseThumbnail()
+})
+
+const getThumbnail = async () => {
+    tracks.value.forEach(track => {
+        track.clips.forEach(clip => {
+            if (clip.type === 'audio' && !clip.volumeData) {
+                getVolume(clip as Media).then(res => {
+                    if (res.type === 'audio') {
+                        clip.volumeData = res.data
+                    }
+                })
+            } else if (clip.type === 'video' || clip.type === 'image') {
+                if (clip.thumbnail && clip.thumbnail.length > 0) {
+                    const img = new Image()
+                    img.src = clip.thumbnail[0].url
+                    img.onerror = () => {
+                        getKeyframes(clip as Media).then(res => {
+                            clip.thumbnail = res.data as { url: string; timestamp: number }[]
+                        })
+                    }
+                } else {
+                    getKeyframes(clip as Media).then(res => {
+                        clip.thumbnail = res.data as { url: string; timestamp: number }[]
+                    })
+                }
+
+            }
+        })
+    })
+}
+
+const releaseThumbnail = () => {
+    tracks.value.forEach(track => {
+        track.clips.forEach(clip => {
+            if (clip.thumbnail.length > 0) {
+                clip.thumbnail.forEach(item => {
+                    URL.revokeObjectURL(item.url)
+                })
+            }
+            clip.thumbnail = null
+        })
+    })
+}
 
 const closeContextMenu = () => {
     trackStore.setShowContextMenu(false)
@@ -338,6 +359,7 @@ const handleStopPlay = () => {
 }
 
 const refreshPlayer = () => {
+    getThumbnail()
     playerRef.value?.refreshPlayer()
 }
 
