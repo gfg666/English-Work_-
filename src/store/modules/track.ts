@@ -1,14 +1,14 @@
-import { defineStore } from "pinia";
-import { store } from "@/store";
-import { Track, TrackClip } from "@/types/track";
-import { db } from "@/db/db";
+import { defineStore } from 'pinia';
+import { store } from '@/store';
+import { Track, TrackClip } from '@/types/track';
+import { db } from '@/db/db';
 
 type ClipUpdateCallback = (
   clip: TrackClip,
-  type: "default" | "resize" | "delete"
+  type: 'default' | 'resize' | 'delete'
 ) => void;
 
-export const useTrackStore = defineStore("track", {
+export const useTrackStore = defineStore('track', {
   state: () => ({
     showContextMenu: false,
     contextMenuPosition: {
@@ -43,7 +43,7 @@ export const useTrackStore = defineStore("track", {
     // 调整clip通知 type: 'default' | 'resize' | 'delete'
     publishClipUpdate(
       clip: TrackClip,
-      type: "default" | "resize" | "delete" = "default"
+      type: 'default' | 'resize' | 'delete' = 'default'
     ) {
       const callback: ClipUpdateCallback | undefined =
         this.clipUpdateSubscribers.get(clip.id!);
@@ -68,7 +68,7 @@ export const useTrackStore = defineStore("track", {
     },
     async saveHistoryState(projectId: number, tracks: Track[]) {
       await db.history
-        .where("projectId")
+        .where('projectId')
         .equals(projectId)
         .and((item) => item.index > this.currentHistoryIndex)
         .delete();
@@ -84,12 +84,12 @@ export const useTrackStore = defineStore("track", {
       });
 
       const count = await db.history
-        .where("projectId")
+        .where('projectId')
         .equals(projectId)
         .count();
       if (count > this.maxHistorySize) {
         const oldestRecords = await db.history
-          .where("projectId")
+          .where('projectId')
           .equals(projectId)
           .and((item) => item.index === 0)
           .toArray();
@@ -105,7 +105,7 @@ export const useTrackStore = defineStore("track", {
       if (!this.canUndo) return null;
 
       const previousState = await db.history
-        .where("projectId")
+        .where('projectId')
         .equals(projectId)
         .and((item) => item.index === this.currentHistoryIndex - 1)
         .first();
@@ -118,7 +118,7 @@ export const useTrackStore = defineStore("track", {
     },
     async redo(projectId: number) {
       const nextState = await db.history
-        .where("projectId")
+        .where('projectId')
         .equals(projectId)
         .and((item) => item.index === this.currentHistoryIndex + 1)
         .first();
@@ -131,13 +131,13 @@ export const useTrackStore = defineStore("track", {
     },
     async getCanRedo(projectId: number) {
       const count = await db.history
-        .where("projectId")
+        .where('projectId')
         .equals(projectId)
         .count();
       return this.currentHistoryIndex < count - 1;
     },
     async clearHistory(projectId: number) {
-      await db.history.where("projectId").equals(projectId).delete();
+      await db.history.where('projectId').equals(projectId).delete();
       this.currentHistoryIndex = -1;
       this.maxHistoryIndex = -1;
     },

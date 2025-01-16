@@ -1,4 +1,4 @@
-export type MediaType = "video" | "audio" | "image" | "text" | "sticker";
+export type MediaType = 'video' | 'audio' | 'image' | 'text' | 'sticker';
 
 export interface Media {
   id?: string;

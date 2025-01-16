@@ -1,12 +1,9 @@
 <template>
-	<router-view></router-view>
+  <router-view></router-view>
 </template>
 <script setup lang="ts">
-onMounted(async () => {
-})
-onUnmounted(() => {
-})
-
+onMounted(async () => {});
+onUnmounted(() => {});
 </script>
 
 <style></style>

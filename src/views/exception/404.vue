@@ -5,12 +5,12 @@
     </template>
   </el-result>
 </template>
-  
-<script setup lang='ts'>
-const router = useRouter()
+
+<script setup lang="ts">
+const router = useRouter();
 const backHome = () => {
-  router.push('/index')
-}
+  router.push('/index');
+};
 </script>
-  
+
 <style lang="scss" scoped></style>

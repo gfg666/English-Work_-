@@ -4,8 +4,8 @@
  * 使用Dexie作为IndexedDB的封装，实现本地数据持久化存储
  */
 
-import { Track } from "@/types/track";
-import Dexie, { type EntityTable } from "dexie";
+import { Track } from '@/types/track';
+import Dexie, { type EntityTable } from 'dexie';
 
 /**
  * 媒体资源接口定义
@@ -26,7 +26,7 @@ interface Media {
   id?: string;
   name: string;
   size?: number;
-  type: "video" | "audio" | "image" | "text" | "sticker";
+  type: 'video' | 'audio' | 'image' | 'text' | 'sticker';
   isAnimateImg?: boolean;
   path?: string;
   duration?: number;
@@ -78,10 +78,10 @@ interface History {
  * 数据库实例
  * 扩展Dexie类型，添加具体的表定义
  */
-const db = new Dexie("ClipDatabase") as Dexie & {
-  medias: EntityTable<Media, "id">; // 媒体资源表
-  projects: EntityTable<Project, "id">; // 项目表
-  history: EntityTable<History, "id">; // 历史记录表
+const db = new Dexie('ClipDatabase') as Dexie & {
+  medias: EntityTable<Media, 'id'>; // 媒体资源表
+  projects: EntityTable<Project, 'id'>; // 项目表
+  history: EntityTable<History, 'id'>; // 历史记录表
 };
 
 /**
@@ -89,9 +89,9 @@ const db = new Dexie("ClipDatabase") as Dexie & {
  * 版本1：创建基础表结构
  */
 db.version(1).stores({
-  medias: "++id, name, size, path, createTime, updateTime", // primary key "id" (for the runtime!)
-  projects: "++id, name, createTime, updateTime", // primary key "id" (for the runtime!)
-  history: "++id, projectId, index, timestamp",
+  medias: '++id, name, size, path, createTime, updateTime', // primary key "id" (for the runtime!)
+  projects: '++id, name, createTime, updateTime', // primary key "id" (for the runtime!)
+  history: '++id, projectId, index, timestamp',
 });
 
 export type { Media, Project };

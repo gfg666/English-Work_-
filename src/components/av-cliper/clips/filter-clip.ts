@@ -1,4 +1,4 @@
-import { IClip } from "@webav/av-cliper";
+import { IClip } from '@webav/av-cliper';
 export class FilterClip implements IClip {
   ready;
 
@@ -31,10 +31,10 @@ export class FilterClip implements IClip {
 
   async tick(time: number): Promise<{
     video?: VideoFrame;
-    state: "success" | "done";
+    state: 'success' | 'done';
   }> {
     return {
-      state: "success",
+      state: 'success',
     };
   }
 

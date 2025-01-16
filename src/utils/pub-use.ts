@@ -3,8 +3,8 @@
  * 包含项目中常用的工具函数，如资源路径获取、ID生成、尺寸计算等
  */
 
-import { TextClip } from "@/components/av-cliper/clips/text-clip";
-import { TextConfig } from "@/types/track";
+import { TextClip } from '@/components/av-cliper/clips/text-clip';
+import { TextConfig } from '@/types/track';
 
 /**
  * 获取图片静态资源的完整URL
@@ -39,8 +39,8 @@ export function isDef(v: any): boolean {
  * @param prefix - ID前缀，默认为't'
  * @returns 生成的唯一ID字符串
  */
-export function getId(prefix = "t"): string {
-  return `${prefix ? `${prefix}-` : ""}${getRandom(5)}${getRandom(
+export function getId(prefix = 't'): string {
+  return `${prefix ? `${prefix}-` : ''}${getRandom(5)}${getRandom(
     3
   )}-${getRandom(4)}`;
 }

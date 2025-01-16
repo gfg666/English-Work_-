@@ -6,7 +6,10 @@ import dayjs from 'dayjs';
  * @param format string 转换对应的格式字符串 'YYYY-MM-DD HH:mm:ss'
  * @returns string
  */
-export function formatDate(date: Date | string, format: string = 'YYYY-MM-DD HH:mm:ss') {
+export function formatDate(
+  date: Date | string,
+  format: string = 'YYYY-MM-DD HH:mm:ss'
+) {
   if (!date || Number(date) === 0) return '';
   return dayjs(date).format(format);
 }
@@ -14,11 +17,11 @@ export function formatDate(date: Date | string, format: string = 'YYYY-MM-DD HH:
 /**
  * 将时间格式化为 "00:05" 形式
  * @param seconds 秒数
- * @returns 
+ * @returns
  */
 export function formatSeconds(seconds, format = 'mm:ss') {
   if (Number.isNaN(seconds)) {
-    return ''
+    return '';
   } else {
     return dayjs(seconds * 1000).format(format) || '';
   }
@@ -30,6 +33,5 @@ export function formatSeconds(seconds, format = 'mm:ss') {
  * @returns string
  */
 export function getAssetsFile(img: string) {
-  return new URL(`../assets/${img}`, import.meta.url).href
+  return new URL(`../assets/${img}`, import.meta.url).href;
 }
-

@@ -1,7 +1,7 @@
-import { MP4Clip, ImgClip, AudioClip } from "@webav/av-cliper";
-import { calculateVolume } from "@/utils/webcodecs";
-import { Media } from "@/db/db";
-import { file } from "opfs-tools";
+import { MP4Clip, ImgClip, AudioClip } from '@webav/av-cliper';
+import { calculateVolume } from '@/utils/webcodecs';
+import { Media } from '@/db/db';
+import { file } from 'opfs-tools';
 
 /**
  * 获取关键帧画面
@@ -14,7 +14,7 @@ export const getKeyframes = async (
   data: { url: string; timestamp: number }[] | Blob;
 }> => {
   return new Promise(async (resolve) => {
-    if (val.type === "image") {
+    if (val.type === 'image') {
       const resp = await file(val.path);
       const clip = new ImgClip(await resp.stream());
       let readyRes = await clip.ready;
@@ -23,13 +23,16 @@ export const getKeyframes = async (
         if (video instanceof ImageBitmap) {
           // 获取图片的blob
           const canvas = new OffscreenCanvas(video.width, video.height);
-          const ctx = canvas.getContext("2d");
+          const ctx = canvas.getContext('2d');
           ctx.drawImage(video, 0, 0, video.width, video.height);
           const blob = await canvas.convertToBlob();
-          resolve({ type: "image", data: [{ url: URL.createObjectURL(blob), timestamp: 0 }] });
+          resolve({
+            type: 'image',
+            data: [{ url: URL.createObjectURL(blob), timestamp: 0 }],
+          });
         }
       }
-    } else if (val.type === "video") {
+    } else if (val.type === 'video') {
       const resp = await file(val.path);
       const clip = new MP4Clip(resp);
       let readyRes = await clip.ready;
@@ -43,8 +46,8 @@ export const getKeyframes = async (
               timestamp: item.ts,
             });
           });
-          console.log("get video frame", (performance.now() - t) / 1000 + "s");
-          resolve({ type: "video", data: list });
+          console.log('get video frame', (performance.now() - t) / 1000 + 's');
+          resolve({ type: 'video', data: list });
         });
       }
     }
@@ -68,7 +71,7 @@ export const getVolume = async (
     let volumeAverages = [];
     while (!audioDone) {
       const { audio, state } = await audioClip.tick(time);
-      if (state === "done") {
+      if (state === 'done') {
         audioDone = true;
         continue;
       }
@@ -82,6 +85,6 @@ export const getVolume = async (
         volumeAverages.push(volume);
       }
     }
-    resolve({ type: "audio", data: volumeAverages });
+    resolve({ type: 'audio', data: volumeAverages });
   });
 };

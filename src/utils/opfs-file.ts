@@ -1,5 +1,5 @@
-import { file, write } from "opfs-tools";
-import { OPFSFileWrap } from "opfs-tools/dist/file";
+import { file, write } from 'opfs-tools';
+import { OPFSFileWrap } from 'opfs-tools/dist/file';
 
 /**
  * 将文件存储在OPFS中
@@ -133,7 +133,7 @@ export async function fileToBlob(file) {
 }
 
 export async function createFileWriter(
-  extName = "mp4"
+  extName = 'mp4'
 ): Promise<FileSystemWritableFileStream> {
   const fileHandle = await window.showSaveFilePicker({
     suggestedName: `WebAV-export-${Date.now()}.${extName}`,
@@ -143,7 +143,7 @@ export async function createFileWriter(
 
 // 将dataURL转换为buffer
 export function dataURLToBuffer(fileDataURL: string) {
-  const base64Data = fileDataURL.split(",")[1];
+  const base64Data = fileDataURL.split(',')[1];
   const binaryString = window.atob(base64Data);
   const len = binaryString.length;
   const buffer = new Uint8Array(len);

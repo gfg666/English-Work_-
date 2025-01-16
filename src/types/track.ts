@@ -6,18 +6,18 @@
  * 媒体类型枚举
  * 定义了支持的媒体类型：视频、音频、图片、文字和滤镜
  */
-export type MediaType = "video" | "audio" | "image" | "text" | "filter";
+export type MediaType = 'video' | 'audio' | 'image' | 'text' | 'filter';
 
 /**
  * 滤镜类型枚举
  * 定义了支持的滤镜效果类型
  */
 export type FilterType =
-  | "grayscale"
-  | "invert"
-  | "brightness"
-  | "sepia"
-  | "blur";
+  | 'grayscale'
+  | 'invert'
+  | 'brightness'
+  | 'sepia'
+  | 'blur';
 
 /**
  * 轨道片段接口
@@ -89,7 +89,7 @@ export interface TrackClip {
  * 定义了滤镜片段的特有属性
  */
 export interface FilterTrackClip extends TrackClip {
-  type: "filter";
+  type: 'filter';
   filterType: FilterType;
   intensity: number;
 }
@@ -170,8 +170,8 @@ export interface TextConfig {
   content: string;
   fontSize: number;
   fontFamily: string;
-  fontStyle: "normal" | "italic" | "oblique";
-  textDecoration: "none" | "underline" | "line-through" | "overline";
+  fontStyle: 'normal' | 'italic' | 'oblique';
+  textDecoration: 'none' | 'underline' | 'line-through' | 'overline';
   fontWeight: number;
   bold: boolean;
   italic: boolean;
@@ -188,7 +188,7 @@ export interface TextConfig {
   height: number;
   lineSpacing: number;
   letterSpacing: number;
-  align: "left" | "center" | "right";
+  align: 'left' | 'center' | 'right';
   backgroundColor: string;
   backgroundOpacity: number;
   borderColor: string;

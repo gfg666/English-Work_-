@@ -1,6 +1,6 @@
-import { useTrackStoreWithOut } from "@/store/modules/track";
-import { TextConfig } from "@/types/track";
-import { IClip } from "@webav/av-cliper";
+import { useTrackStoreWithOut } from '@/store/modules/track';
+import { TextConfig } from '@/types/track';
+import { IClip } from '@webav/av-cliper';
 export class TextClip implements IClip {
   #cvsEl;
   #ctx;
@@ -40,12 +40,12 @@ export class TextClip implements IClip {
     textConfig: TextConfig,
     callback: (width: number, height: number) => void
   ) {
-    this.#cvsEl = document.createElement("canvas");
+    this.#cvsEl = document.createElement('canvas');
     this.#textConfig = textConfig;
     this.#callback = callback;
 
-    this.#ctx = this.#cvsEl.getContext("2d")!;
-    const contentList = this.#textConfig.content.split("\n");
+    this.#ctx = this.#cvsEl.getContext('2d')!;
+    const contentList = this.#textConfig.content.split('\n');
     const { xPadding, yPadding } = this.#calcPadding();
     this.#cvsEl.width = this.#getLineWidth(contentList) + xPadding * 2;
     this.#cvsEl.height = this.#getLineHeight(contentList) + yPadding * 2;
@@ -62,10 +62,10 @@ export class TextClip implements IClip {
 
   async tick(time: number): Promise<{
     video?: VideoFrame;
-    state: "success" | "done";
+    state: 'success' | 'done';
   }> {
     // 根据字体大小、行高、字间距、边框宽度、阴影宽度计算整体宽高
-    const contentList = this.#textConfig.content.split("\n");
+    const contentList = this.#textConfig.content.split('\n');
     const { xPadding, yPadding } = this.#calcPadding();
     const maxLineWidth = this.#getLineWidth(contentList);
     const maxLineHeight = this.#getLineHeight(contentList);
@@ -76,11 +76,11 @@ export class TextClip implements IClip {
     this.#callback(maxLineWidth + xPadding * 2, maxLineHeight + yPadding * 2);
     this.#ctx.clearRect(0, 0, this.#cvsEl.width, this.#cvsEl.height);
     this.#ctx.fillStyle = this.#textConfig.color;
-    this.#ctx.font = `${this.#textConfig.bold ? "bold" : ""} ${
-      this.#textConfig.italic ? "italic" : ""
+    this.#ctx.font = `${this.#textConfig.bold ? 'bold' : ''} ${
+      this.#textConfig.italic ? 'italic' : ''
     } ${this.#textConfig.fontSize}px ${this.#textConfig.fontFamily}`;
 
-    this.#ctx.textBaseline = "hanging";
+    this.#ctx.textBaseline = 'hanging';
     if (this.#textConfig.showShadow) {
       this.#ctx.shadowColor = this.#textConfig.shadowColor;
       this.#ctx.shadowBlur = this.#textConfig.shadowBlur;
@@ -92,22 +92,24 @@ export class TextClip implements IClip {
 
     for (let i = 0; i < contentList.length; i++) {
       // 根据对齐模式设置横向起始位置
-      let lineWidth = this.#textConfig.fontSize * contentList[i].length + this.#textConfig.letterSpacing * (contentList[i].length - 1);
+      let lineWidth =
+        this.#textConfig.fontSize * contentList[i].length +
+        this.#textConfig.letterSpacing * (contentList[i].length - 1);
       switch (this.#textConfig.align) {
-        case "left":
+        case 'left':
           x = 0;
           break;
-        case "center":
+        case 'center':
           x = (this.#cvsEl.width - lineWidth) / 2;
           break;
-        case "right":
+        case 'right':
           x = this.#cvsEl.width - lineWidth;
           break;
       }
 
       for (let j = 0; j < contentList[i].length; j++) {
         if (this.#textConfig.showStroke) {
-          this.#ctx.lineJoin = "round";
+          this.#ctx.lineJoin = 'round';
           this.#ctx.strokeStyle = this.#textConfig.strokeColor;
           this.#ctx.lineWidth = this.#textConfig.strokeWidth;
           this.#ctx.strokeText(
@@ -129,7 +131,7 @@ export class TextClip implements IClip {
     }
 
     return {
-      state: "success",
+      state: 'success',
       video: new VideoFrame(this.#cvsEl, {
         timestamp: time,
       }),
@@ -178,15 +180,18 @@ export class TextClip implements IClip {
   }
 
   async generateImage() {
-    const {video} = await this.tick(0);
-    const offscreenCanvas = new OffscreenCanvas(video.codedWidth, video.codedHeight);
-    const ctx = offscreenCanvas.getContext("2d");
+    const { video } = await this.tick(0);
+    const offscreenCanvas = new OffscreenCanvas(
+      video.codedWidth,
+      video.codedHeight
+    );
+    const ctx = offscreenCanvas.getContext('2d');
     ctx.drawImage(video, 0, 0, video.codedWidth, video.codedHeight);
     const blob = await offscreenCanvas.convertToBlob();
     // 下载图片
-    const a = document.createElement("a");
+    const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
-    a.download = "text.png";
+    a.download = 'text.png';
     a.click();
   }
 

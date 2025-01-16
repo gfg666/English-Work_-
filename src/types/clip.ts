@@ -1,13 +1,13 @@
 // 滤镜类型
 export type FilterType =
-  | "grayscale"
-  | "sepia"
-  | "invert"
-  | "brightness"
-  | "blur";
+  | 'grayscale'
+  | 'sepia'
+  | 'invert'
+  | 'brightness'
+  | 'blur';
 
 // 轨道片段类型
-export type TrackClipType = "video" | "audio" | "text" | "sticker" | "filter";
+export type TrackClipType = 'video' | 'audio' | 'text' | 'sticker' | 'filter';
 
 // 轨道片段基础接口
 export interface BaseTrackClip {
@@ -20,21 +20,21 @@ export interface BaseTrackClip {
 
 // 视频片段
 export interface VideoTrackClip extends BaseTrackClip {
-  type: "video";
+  type: 'video';
   url: string;
   thumbnail: Array<{ timestamp: number; url: string }>;
 }
 
 // 音频片段
 export interface AudioTrackClip extends BaseTrackClip {
-  type: "audio";
+  type: 'audio';
   url: string;
   waveform: number[];
 }
 
 // 文字片段
 export interface TextTrackClip extends BaseTrackClip {
-  type: "text";
+  type: 'text';
   text: string;
   style: {
     fontSize: number;
@@ -45,7 +45,7 @@ export interface TextTrackClip extends BaseTrackClip {
 
 // 贴图片段
 export interface StickerTrackClip extends BaseTrackClip {
-  type: "sticker";
+  type: 'sticker';
   url: string;
   width: number;
   height: number;
@@ -54,7 +54,7 @@ export interface StickerTrackClip extends BaseTrackClip {
 
 // 滤镜片段
 export interface FilterTrackClip extends BaseTrackClip {
-  type: "filter";
+  type: 'filter';
   filterType: FilterType;
   intensity: number;
 }

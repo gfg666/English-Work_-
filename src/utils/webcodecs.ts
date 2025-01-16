@@ -56,7 +56,7 @@ export function createAudioPlaceholder(
     numberOfChannels: DEFAULT_AUDIO_CONF.channelCount,
     numberOfFrames: frameCnt,
     sampleRate: sampleRate,
-    format: "f32-planar", // 使用32位浮点数平面格式
+    format: 'f32-planar', // 使用32位浮点数平面格式
     data: new Float32Array(frameCnt * 2), // 创建静音数据（全0）
   });
 }

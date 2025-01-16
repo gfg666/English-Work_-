@@ -5,11 +5,12 @@ export const throttle = {
     // 获取指令参数，如果没有，则默认为 2000ms
     el.addEventListener('click', () => {
       if (!el.disabled) {
-        el.disabled = true; clearTimeout(timeoutId); // 清除之前的定时器
+        el.disabled = true;
+        clearTimeout(timeoutId); // 清除之前的定时器
         timeoutId = setTimeout(() => {
           el.disabled = false;
         }, delay);
       }
     });
-  }
+  },
 };
