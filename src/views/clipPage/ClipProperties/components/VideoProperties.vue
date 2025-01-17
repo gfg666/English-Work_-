@@ -76,24 +76,24 @@
         <div class="text-base text-[#999] mb-1">去片头</div>
         <el-input-number
           class="w-30"
-          v-model="clip.sourceStartTime"
+          :model-value="clip.sourceStartTime"
           size="small"
           :min="0"
           :step="0.1"
           placeholder="去片头时间"
-          @change="(val) => handleDefaultZero(val, 'sourceStartTime')"
+          @change="handleChangeHead"
         />
       </div>
       <div class="flex-1">
         <div class="text-base text-[#999] mb-1">去片尾</div>
         <el-input-number
           class="w-30"
-          v-model="clip.sourceEndTime"
+          :model-value="clip.sourceEndTime"
           size="small"
           :min="0"
           :step="0.1"
           placeholder="去片尾时间"
-          @change="(val) => handleDefaultZero(val, 'sourceEndTime')"
+          @change="handleChangeTail"
         />
       </div>
     </div>
@@ -133,7 +133,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref, computed, inject } from 'vue';
 import type { TrackClip } from '@/types/track';
 import { Icon } from '@iconify/vue';
 
@@ -142,6 +142,14 @@ const props = defineProps<{
 }>();
 
 const emit = defineEmits(['update']);
+
+// 注入处理方法
+const handleChangeHead = inject('handleChangeHead') as (
+  val: number | null
+) => void;
+const handleChangeTail = inject('handleChangeTail') as (
+  val: number | null
+) => void;
 
 const isDragging = ref(false);
 

@@ -34,7 +34,11 @@
         </div>
         <!-- 右侧属性面板 -->
         <div id="topRight" class="w-1/5 bg-[#303030]">
-          <ClipProperties :clip="selectedClip" @update="updateClipProps" />
+          <ClipProperties
+            :clip="selectedClip"
+            :min-clip-duration="minClipDuration"
+            @update="updateClipProps"
+          />
         </div>
       </div>
       <!-- 底部轨道编辑区域 -->
@@ -42,10 +46,16 @@
         <ClipTrack
           ref="clipTrackRef"
           v-model:tracks="tracks"
+          :trackZoom="trackZoom"
           :maxTracksNum="MAX_TRACKS_NUM"
           :currentTime="currentTime"
           :timelineDuration="timelineDuration"
+          :BASE_TICK_SPACING="BASE_TICK_SPACING"
+          :MIN_CLIP_WIDTH="MIN_CLIP_WIDTH"
+          :frame-length="frameLength"
+          :min-clip-duration="minClipDuration"
           @stopPlay="handleStopPlay"
+          @updateTrackZoom="updateTrackZoom"
           @timeUpdate="timeUpdate"
           @add-clip="addPlayerClip"
           @refreshPlayer="refreshPlayer"
@@ -106,6 +116,24 @@ const BUFFER_DURATION = 5; // 缓冲时长（秒）
 const SPLIT_STORAGE_KEY = 'split-sizes';
 const DEFAULT_HORIZONTAL_SIZES = [25, 75];
 const DEFAULT_VERTICAL_SIZES = [65, 35];
+
+// 轨道相关常量
+const BASE_TICK_SPACING = 3; // 基础刻度间距(px)
+const MIN_CLIP_WIDTH = 30; // 最小片段宽度(px)
+const ZOOM_STORAGE_KEY = 'track-zoom-value';
+
+// 从 localStorage 获取缩放值
+const trackZoom = ref(
+  parseFloat(localStorage.getItem(ZOOM_STORAGE_KEY) || '1')
+);
+
+const updateTrackZoom = (zoom: number) => {
+  trackZoom.value = zoom;
+  localStorage.setItem(ZOOM_STORAGE_KEY, zoom.toString());
+};
+// 计算属性
+const frameLength = computed(() => BASE_TICK_SPACING * trackZoom.value * 10); // 每秒占据的像素
+const minClipDuration = computed(() => MIN_CLIP_WIDTH / frameLength.value); // 根据缩放计算最小持续时间
 
 // 轨道数据
 const tracks = ref<Track[]>([]);
@@ -241,7 +269,7 @@ onMounted(async () => {
       };
 
   // 初始化水平分割
-  const horizontalSplit = Split(['#left', '#right'], {
+  Split(['#left', '#right'], {
     sizes: horizontalSizes,
     minSize: [250, 500],
     snapOffset: 0,
@@ -260,7 +288,7 @@ onMounted(async () => {
   });
 
   // 初始化垂直分割
-  const verticalSplit = Split(['#top', '#bottom'], {
+  Split(['#top', '#bottom'], {
     direction: 'vertical',
     sizes: verticalSizes,
     minSize: [250, 150],
@@ -323,7 +351,7 @@ const getThumbnail = async () => {
 const releaseThumbnail = () => {
   tracks.value.forEach((track) => {
     track.clips.forEach((clip) => {
-      if (clip.thumbnail.length > 0) {
+      if (clip.thumbnail && clip.thumbnail.length > 0) {
         clip.thumbnail.forEach((item) => {
           URL.revokeObjectURL(item.url);
         });
@@ -337,11 +365,11 @@ const closeContextMenu = () => {
   trackStore.setShowContextMenu(false);
 };
 
-const updateClipProps = (id, newProps: any) => {
+const updateClipProps = (updateClip: TrackClip) => {
   for (const track of tracks.value) {
     for (const clip of track.clips) {
-      if (clip.id === id) {
-        Object.assign(clip, newProps);
+      if (clip.id === updateClip.id) {
+        Object.assign(clip, updateClip);
         break;
       }
     }

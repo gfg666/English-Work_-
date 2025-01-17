@@ -15,7 +15,7 @@
           :min="0"
           :step="0.1"
           placeholder="去片头时间"
-          @change="(val) => handleDefaultZero(val, 'sourceStartTime')"
+          @change="handleChangeHead"
         />
       </div>
       <div class="flex-1">
@@ -27,7 +27,7 @@
           :min="0"
           :step="0.1"
           placeholder="去片尾时间"
-          @change="(val) => handleDefaultZero(val, 'sourceEndTime')"
+          @change="handleChangeTail"
         />
       </div>
     </div>
@@ -60,12 +60,21 @@
 <script setup lang="ts">
 import type { TrackClip } from '@/types/track';
 import { Icon } from '@iconify/vue';
+import { inject } from 'vue';
 
 const props = defineProps<{
   clip: TrackClip;
 }>();
 
 const emit = defineEmits(['update']);
+
+// 注入处理方法
+const handleChangeHead = inject('handleChangeHead') as (
+  val: number | null
+) => void;
+const handleChangeTail = inject('handleChangeTail') as (
+  val: number | null
+) => void;
 
 // 处理默认值为0
 const handleDefaultZero = (val: number | null, prop: string) => {

@@ -7,12 +7,18 @@
     <template v-if="clip">
       <!-- 视频属性 -->
       <template v-if="clip.type === 'video'">
-        <VideoProperties :clip="clip" @update="handleUpdate" />
+        <VideoProperties
+          :clip="clip"
+          @update="handleUpdate"
+        />
       </template>
 
       <!-- 音频属性 -->
       <template v-if="clip.type === 'audio'">
-        <AudioProperties :clip="clip" @update="handleUpdate" />
+        <AudioProperties
+          :clip="clip"
+          @update="handleUpdate"
+        />
       </template>
 
       <!-- 图片属性 -->
@@ -49,6 +55,7 @@ import FilterProperties from './components/FilterProperties.vue';
 
 const props = defineProps<{
   clip: TrackClip;
+  minClipDuration: number;
 }>();
 
 const emit = defineEmits(['update']);
@@ -59,6 +66,59 @@ const trackStore = useTrackStore();
 const handleUpdate = (updatedClip: TrackClip) => {
   emit('update', updatedClip);
 };
+
+// 处理去片头
+const handleChangeHead = (val: number | null) => {
+  if (!props.clip) return;
+  const oldSourceStartTime = Number(props.clip.sourceStartTime);
+  const value = val === null || isNaN(val) ? 0 : val;
+  const newDuration =
+    props.clip.originalDuration - value - props.clip.sourceEndTime;
+  if (newDuration < props.minClipDuration) return;
+
+  props.clip.sourceStartTime = value;
+  const diff = props.clip.sourceStartTime - oldSourceStartTime;
+  // 调整startTime和duration
+  if (props.clip.startTime + diff < 0) {
+    props.clip.startTime = 0;
+    props.clip.duration =
+      props.clip.originalDuration -
+      props.clip.sourceStartTime -
+      props.clip.sourceEndTime;
+    props.clip.endTime = props.clip.startTime + props.clip.duration;
+  } else {
+    props.clip.startTime = props.clip.startTime + diff;
+    props.clip.duration =
+      props.clip.originalDuration -
+      props.clip.sourceStartTime -
+      props.clip.sourceEndTime;
+    props.clip.endTime = props.clip.startTime + props.clip.duration;
+  }
+
+  emit('update', props.clip);
+};
+
+// 处理去片尾
+const handleChangeTail = (val: number | null) => {
+  if (!props.clip) return;
+  const oldSourceEndTime = Number(props.clip.sourceEndTime);
+  const value = val === null || isNaN(val) ? 0 : val;
+  const newDuration =
+    props.clip.originalDuration - value - props.clip.sourceStartTime;
+  if (newDuration < props.minClipDuration) return;
+
+  props.clip.sourceEndTime = value;
+  const diff = props.clip.sourceEndTime - oldSourceEndTime;
+  // 调整endTime和duration
+  props.clip.endTime = props.clip.endTime - diff;
+  props.clip.duration = props.clip.duration - diff;
+
+  emit('update', props.clip);
+};
+
+// 提供给子组件使用
+provide('handleChangeHead', handleChangeHead);
+provide('handleChangeTail', handleChangeTail);
 
 // 监听属性变化
 watch(

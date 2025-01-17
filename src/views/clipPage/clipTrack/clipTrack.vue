@@ -189,9 +189,13 @@ import { ElMessage } from 'element-plus';
 
 const props = defineProps<{
   tracks: Track[];
+  trackZoom: number;
   maxTracksNum: number;
   currentTime: number;
   timelineDuration: number;
+  BASE_TICK_SPACING: number;
+  frameLength: number;
+  minClipDuration: number;
 }>();
 const emit = defineEmits<{
   (e: 'resetTrack'): void;
@@ -203,56 +207,50 @@ const emit = defineEmits<{
   (e: 'delete-empty-track'): void;
   (e: 'handleExport'): void;
   (e: 'update:tracks', tracks: Track[]): void;
+  (e: 'updateTrackZoom', trackZoom: number): void;
 }>();
 
 // 时间轴相关
-const frameLength = computed(() => BASE_TICK_SPACING * trackZoom.value * 10); // 每秒占据的像素
-const ZOOM_STORAGE_KEY = 'track-zoom-value';
-
-// 从 localStorage 获取缩放值，如果没有则使用默认值 1
-const trackZoom = ref(
-  parseFloat(localStorage.getItem(ZOOM_STORAGE_KEY) || '1')
-);
-
-const BASE_TICK_SPACING = 3; // 基础刻度间距(px)
 const SCROLL_THRESHOLD = 150; // 滚动触发距离（像素）
 
 // 缩放相关方法
 const zoomIn = () => {
-  if (trackZoom.value < 5) {
-    if (trackZoom.value < 1) {
+  let zoom =  0
+  if (props.trackZoom < 5) {
+    if (props.trackZoom < 1) {
       // 当缩放比例小于1时，每次增加0.1
-      trackZoom.value = Math.min(
+      zoom = Math.min(
         5,
-        Math.round((trackZoom.value + 0.1) * 10) / 10
+        Math.round((props.trackZoom + 0.1) * 10) / 10
       );
     } else {
       // 当缩放比例大于等于1时，每次增加1
-      trackZoom.value = Math.min(5, Math.floor(trackZoom.value + 1));
+      zoom = Math.min(5, Math.floor(props.trackZoom + 1));
     }
     // 保存到 localStorage
-    localStorage.setItem(ZOOM_STORAGE_KEY, trackZoom.value.toString());
+    emit('updateTrackZoom', zoom);
   }
 };
 
 const zoomOut = () => {
-  if (trackZoom.value > 0.3) {
-    if (trackZoom.value <= 1) {
+  let zoom = 0
+  if (props.trackZoom > 0.3) {
+    if (props.trackZoom <= 1) {
       // 当缩放比例小于等于1时，每次减少0.1
-      trackZoom.value = Math.max(
+      zoom = Math.max(
         0.3,
-        Math.round((trackZoom.value - 0.1) * 10) / 10
+        Math.round((props.trackZoom - 0.1) * 10) / 10
       );
     } else {
       // 当缩放比例大于1时，每次减少1
-      trackZoom.value = Math.max(1, Math.floor(trackZoom.value - 1));
+      zoom = Math.max(1, Math.floor(props.trackZoom - 1));
     }
     // 保存到 localStorage
-    localStorage.setItem(ZOOM_STORAGE_KEY, trackZoom.value.toString());
+    emit('updateTrackZoom', zoom);
   }
 };
 
-const totalWidth = computed(() => props.timelineDuration * frameLength.value);
+const totalWidth = computed(() => props.timelineDuration * props.frameLength);
 // 拖拽相关状态
 const tracksListRef = ref(null);
 const hoveredTrack = ref(-1);
@@ -289,7 +287,7 @@ const handleDragOver = (e: DragEvent) => {
   const mediaData = trackStore.getDragData;
   if (!mediaData) return;
 
-  const currentTime = relativeX / frameLength.value;
+  const currentTime = relativeX / props.frameLength;
 
   try {
     if (trackId) {
@@ -308,18 +306,18 @@ const handleDragOver = (e: DragEvent) => {
           isReplaceMode.value = true;
           targetClip.value = overlappingClip;
           dragPreviewPosition.value =
-            overlappingClip.startTime * frameLength.value;
+            overlappingClip.startTime * props.frameLength;
           hoveredTrack.value = trackIndex;
         } else {
           // 在轨道上但不在 clip 范围内
           targetClip.value = null;
-          dragPreviewPosition.value = currentTime * frameLength.value;
+          dragPreviewPosition.value = currentTime * props.frameLength;
           hoveredTrack.value = trackIndex;
         }
       }
     } else {
       targetClip.value = null;
-      dragPreviewPosition.value = currentTime * frameLength.value;
+      dragPreviewPosition.value = currentTime * props.frameLength;
       hoveredTrack.value = -1;
     }
   } catch (err) {
@@ -361,7 +359,7 @@ const handleDrop = async (e: DragEvent) => {
   e.preventDefault();
   const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
   const relativeX = e.clientX - rect.left;
-  const currentTime = relativeX / frameLength.value;
+  const currentTime = relativeX / props.frameLength;
 
   // 从 store 中获取拖拽数据
   const mediaData = trackStore.getDragData;
@@ -539,10 +537,6 @@ const startResize = (event: MouseEvent, clip: any, type: 'left' | 'right') => {
   document.addEventListener('mouseup', stopResize);
 };
 
-// 添加最小宽度计算
-const MIN_CLIP_WIDTH = 30; // 最小像素宽度
-const minClipDuration = computed(() => MIN_CLIP_WIDTH / frameLength.value); // 根据缩放计算最小持续时间
-
 // 处理调整大小
 const handleResize = (event: MouseEvent) => {
   if (!isResizing.value || !selectedClip.value) return;
@@ -552,7 +546,7 @@ const handleResize = (event: MouseEvent) => {
 
   const rect = trackContainer.value.getBoundingClientRect();
   const relativeX = event.clientX - rect.left + trackContainer.value.scrollLeft;
-  const currentTime = relativeX / frameLength.value;
+  const currentTime = relativeX / props.frameLength;
 
   if (
     selectedClip.value.type === 'video' ||
@@ -566,7 +560,7 @@ const handleResize = (event: MouseEvent) => {
       const sourceEndTime = Number(selectedClip.value.sourceEndTime);
 
       // 确保不超过最小宽度且不小于0
-      const maxStartTime = endTime - minClipDuration.value;
+      const maxStartTime = endTime - props.minClipDuration;
       const newStartTime = Math.min(Math.max(0, currentTime), maxStartTime);
       const newDuration = endTime - newStartTime;
 
@@ -588,7 +582,7 @@ const handleResize = (event: MouseEvent) => {
       const sourceStartTime = Number(selectedClip.value.sourceStartTime);
 
       // 确保不小于最小宽度
-      const minEndTime = startTime + minClipDuration.value;
+      const minEndTime = startTime + props.minClipDuration;
       const maxEndTime = startTime + (originalDuration - sourceStartTime);
       const newEndTime = Math.min(
         Math.max(minEndTime, currentTime),
@@ -615,7 +609,7 @@ const handleResize = (event: MouseEvent) => {
       const endTime = Number(selectedClip.value.endTime);
 
       // 只确保不超过最小宽度且不小于0
-      const maxStartTime = endTime - minClipDuration.value;
+      const maxStartTime = endTime - props.minClipDuration;
       const newStartTime = Math.min(Math.max(0, currentTime), maxStartTime);
       const newDuration = endTime - newStartTime;
 
@@ -625,7 +619,7 @@ const handleResize = (event: MouseEvent) => {
       const startTime = Number(selectedClip.value.startTime);
 
       // 只确保不小于最小宽度
-      const minEndTime = startTime + minClipDuration.value;
+      const minEndTime = startTime + props.minClipDuration;
       const newEndTime = Math.max(minEndTime, currentTime);
       const newDuration = newEndTime - startTime;
 
@@ -677,7 +671,7 @@ const handleClipMouseDown = (clip: any, trackId: string, event: MouseEvent) => {
   // 计算点击位置对应的时间
   const rect = trackContainer.value.getBoundingClientRect();
   const relativeX = event.clientX - rect.left + trackContainer.value.scrollLeft;
-  const clickTime = relativeX / frameLength.value;
+  const clickTime = relativeX / props.frameLength;
 
   // 记录初始点击位置
   mouseDownPosition.value = { x: event.clientX, y: event.clientY };
@@ -734,7 +728,7 @@ const startDrag = (clip: any, event: MouseEvent) => {
 
   const containerRect = trackContainer.value.getBoundingClientRect();
   const clipStartPixel =
-    Number(clip.startTime) * frameLength.value +
+    Number(clip.startTime) * props.frameLength +
     containerRect.left -
     trackContainer.value.scrollLeft;
   mouseOffsetInClip.value = event.clientX - clipStartPixel;
@@ -803,7 +797,7 @@ const handleAutoScroll = () => {
     const mouseXInContainer =
       lastMouseX.value - containerRect.left + trackContainer.value.scrollLeft;
     const newStartPixel = mouseXInContainer - mouseOffsetInClip.value;
-    const newStartTime = Math.max(0, newStartPixel / frameLength.value);
+    const newStartTime = Math.max(0, newStartPixel / props.frameLength);
     const duration = Number(draggedClip.value.duration);
 
     // 更新clip位置
@@ -866,7 +860,7 @@ const handleDrag = (event: MouseEvent) => {
         snappedPosition.value = null;
       } else {
         // 保持在吸附位置
-        const snapTime = snappedPosition.value / frameLength.value;
+        const snapTime = snappedPosition.value / props.frameLength;
         draggedClip.value.startTime = snapTime;
         draggedClip.value.endTime = snapTime + duration;
         return;
@@ -875,39 +869,39 @@ const handleDrag = (event: MouseEvent) => {
 
     // 如果没有吸附,寻找新的吸附点
     for (const clip of otherClips) {
-      const clipStartPixel = Number(clip.startTime) * frameLength.value;
-      const clipEndPixel = Number(clip.endTime) * frameLength.value;
+      const clipStartPixel = Number(clip.startTime) * props.frameLength;
+      const clipEndPixel = Number(clip.endTime) * props.frameLength;
 
       // 检查开始位置是否需要吸附到其他片段的结束位置
       const diffStart = Math.abs(currentPixel - clipEndPixel);
       if (diffStart <= SNAP_THRESHOLD) {
         isSnapped.value = true;
         snappedPosition.value = clipEndPixel;
-        draggedClip.value.startTime = clipEndPixel / frameLength.value;
-        draggedClip.value.endTime = clipEndPixel / frameLength.value + duration;
+        draggedClip.value.startTime = clipEndPixel / props.frameLength;
+        draggedClip.value.endTime = clipEndPixel / props.frameLength + duration;
         return;
       }
 
       // 检查结束位置是否需要吸附到其他片段的开始位置
       const diffEnd = Math.abs(
-        currentPixel + duration * frameLength.value - clipStartPixel
+        currentPixel + duration * props.frameLength - clipStartPixel
       );
       if (diffEnd <= SNAP_THRESHOLD) {
         isSnapped.value = true;
-        snappedPosition.value = clipStartPixel - duration * frameLength.value;
+        snappedPosition.value = clipStartPixel - duration * props.frameLength;
         draggedClip.value.startTime =
-          clipStartPixel / frameLength.value - duration;
-        draggedClip.value.endTime = clipStartPixel / frameLength.value;
+          clipStartPixel / props.frameLength - duration;
+        draggedClip.value.endTime = clipStartPixel / props.frameLength;
         return;
       }
     }
   }
 
   // 如果没有吸附,正常移动
-  draggedClip.value.startTime = Math.max(0, currentPixel / frameLength.value);
+  draggedClip.value.startTime = Math.max(0, currentPixel / props.frameLength);
   draggedClip.value.endTime = Math.max(
     duration,
-    currentPixel / frameLength.value + duration
+    currentPixel / props.frameLength + duration
   );
 
   // 如果拖动到其他轨道
