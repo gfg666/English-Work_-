@@ -315,10 +315,12 @@ const initClip = async (clip: TrackClip) => {
           audioClip = newStartClips[1];
         }
       }
-      // audioClip.tickInterceptor = async (time, tickRet) => {
-      //     tickRet.audio = tickRet.audio.map((value) => value = value * (clip.volume / 100))
-      //     return tickRet
-      // }
+      audioClip.tickInterceptor = async (time, tickRet) => {
+        tickRet.audio = tickRet.audio.map(
+          (value) => new Float32Array(value.map((v) => v * (clip.volume / 100)))
+        );
+        return tickRet;
+      };
       spr = new VisibleSprite(audioClip);
       spr.visible = false;
       break;
