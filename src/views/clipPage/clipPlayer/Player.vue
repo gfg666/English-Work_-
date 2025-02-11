@@ -118,8 +118,7 @@ const injectActiveClip = inject('activeClip') as
 // 状态变量
 const loading = ref(false);
 const isPlaying = ref(false);
-const volume = ref(100);
-const isMuted = ref(false);
+
 const isFullscreen = ref(false);
 const avCanvas = ref(null);
 const playerRef = ref<HTMLElement | null>(null);
@@ -344,7 +343,8 @@ const initClip = async (clip: TrackClip) => {
 
     case 'text': {
       const textClip = new TextClip(clip.textConfig, (width, height) => {
-        emit('updateClipProps', clip.id, {
+        emit('updateClipProps', {
+          id: clip.id,
           w: width,
           h: height,
         });
@@ -384,7 +384,8 @@ const initClip = async (clip: TrackClip) => {
   if (clip.type !== 'audio') {
     if (!clip.w) {
       if (clip.type === 'text') {
-        emit('updateClipProps', clip.id, {
+        emit('updateClipProps', {
+          id: clip.id,
           x: spr.rect.x,
           y: spr.rect.y,
           w: clip.textConfig.width,
@@ -392,7 +393,8 @@ const initClip = async (clip: TrackClip) => {
           angle: spr.rect.angle,
         });
       } else {
-        emit('updateClipProps', clip.id, {
+        emit('updateClipProps', {
+          id: clip.id,
           x: spr.rect.x,
           y: spr.rect.y,
           w: spr.rect.w,
@@ -418,7 +420,11 @@ const initClip = async (clip: TrackClip) => {
         clip.w = event.w;
       }
     } else {
-      emit('updateClipProps', clip.id, event);
+      const props = {
+        id: clip.id,
+        ...event,
+      };
+      emit('updateClipProps', props);
     }
   });
 };
@@ -569,7 +575,6 @@ const updateClip = async (
   spr.opacity = Number((clip.opacity / 100).toFixed(2));
 
   updateSpritesZIndex();
-
   if (clip.type === 'text') {
     const textClip: TextClip = spr.getClip() as TextClip;
     textClip.textConfig = clip.textConfig;
