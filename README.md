@@ -18,13 +18,13 @@
    - 轨道操作历史记录
    - 最多支持10个并行轨道
 
-2. 媒体剪辑功能
-   - 视频分割
-   - 音频波形可视化
-   - 视频帧级精确定位
-   - 支持动态图片（GIF）
-   - 支持视频片段的音量调节
-   - 支持视频片段的滤镜
+2. Media Editing Functions
+    - Video Segmentation
+    - Visualization of Audio Waveform
+    - Precise Positioning at the Video Frame Level
+    - Support for Dynamic Images (GIF)
+    - Support for Volume Adjustment of Video Clips
+    - Support for Filters of Video Clips 
 
 3. 文字编辑功能
    - 丰富的文字样式设置
