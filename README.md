@@ -1,5 +1,3 @@
-🚀 Use Cases
+# Yifang Clip
 
-- Lightweight video content creation
-- Quick editing of instructional or demo videos
-- Fast, browser-based video editing without the need for server-side processing
+Yifang Clip is a browser-based video editing tool that provides a "frontend-only, no backend" audio and video editing experience. The project is powered by WebAV, offering high-performance video processing capabilities.
