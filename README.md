@@ -12,17 +12,19 @@
 
 ## 功能特点
 
-1. Multi-track Editing
-Supports multiple video, audio, image, and text tracks
-Drag-and-drop sorting and position adjustment between tracks
-Track operation history
-2. 媒体剪辑功能
-   - 视频分割
-   - 音频波形可视化
-   - 视频帧级精确定位
-   - 支持动态图片（GIF）
-   - 支持视频片段的音量调节
-   - 支持视频片段的滤镜
+1. Multi-track editing
+   - Support multiple video, audio, picture and text tracks
+   - Drag-and-drop sorting and position adjustment are supported between tracks
+   - Track operation history
+   - Support up to 10 parallel tracks
+
+2. Media editing function
+   - Video segmentation
+   - Visualization of audio waveforms
+   -  Accurate positioning at the video frame level
+   - Support dynamic pictures (GIF)
+   - Support the volume adjustment of video clips
+   -  Support the filter of video clips
 
 3. 文字编辑功能
    - 丰富的文字样式设置
