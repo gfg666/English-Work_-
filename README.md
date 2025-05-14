@@ -70,10 +70,10 @@
    - 使用 OPFS (Origin Private File System) 存储媒体文件
    - 注意浏览器存储空间限制
 
-3. 性能考虑
-   - 建议处理 1080p 以下视频
-   - 长视频处理可能需要较长时间
-   - 导出时占用资源较多,请耐心等待
+3. Performance Considerations
+   - Recommended for processing videos under 1080p
+   - Long videos may take more time to process
+   - Exporting may be resource-intensive — please be patient
 
 ## 技术栈
 
