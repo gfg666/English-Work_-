@@ -26,17 +26,17 @@
    - Support the volume adjustment of video clips
    -  Support the filter of video clips
 
-3. 文字编辑功能
-   - 丰富的文字样式设置
-   - 自定义字体大小、颜色
-   - 文字阴影和描边效果
-   - 多种文本对齐方式
+3. Text Editing Features
+   - Rich text styling options
+   - Customizable font size and color
+   - Text shadow and stroke effects
+   - Multiple text alignment options
 
-4. 实时预览
-   - 实时预览编辑效果
-   - 支持全屏预览
-   - 帧进帧退精确预览
-   - 自适应画布尺寸
+4. Real-Time Preview
+   - Real-time editing preview
+   - Full-screen preview support
+   - Frame-by-frame precise preview
+   - Adaptive canvas sizing
 
 5. 项目管理
    - 本地项目保存
@@ -70,10 +70,9 @@
    - 使用 OPFS (Origin Private File System) 存储媒体文件
    - 注意浏览器存储空间限制
 
-3. 性能考虑
-   - 建议处理 1080p 以下视频
-   - 长视频处理可能需要较长时间
-   - 导出时占用资源较多,请耐心等待
+3. Performance Considerations
+   - Recommended for processing videos under 1080p
+   - Long videos may take more time to process
 
 ## 技术栈
 
