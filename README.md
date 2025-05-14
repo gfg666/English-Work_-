@@ -73,7 +73,6 @@
 3. Performance Considerations
    - Recommended for processing videos under 1080p
    - Long videos may take more time to process
-   - Exporting may be resource-intensive -please be patient
 
 ## 技术栈
 
