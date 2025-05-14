@@ -38,37 +38,37 @@
    - Frame-by-frame precise preview
    - Adaptive canvas sizing
 
-5. 项目管理
-   - 本地项目保存
+5. Project Management
+   - Local project saving
 
-6. 导出功能
-   - 支持导出MP4格式
-   - 导出进度实时显示
-   - 支持中断导出操作
+6. Exporting
+   - Export as MP4 format
+   - Real-time export progress display
+   - Export operation can be interrupted
 
-7. 本地化存储
-   - 使用IndexedDB存储项目数据
-   - 使用OPFS存储媒体文件
-   - 无需服务器即可运行
-   - 保护用户隐私数据
+7. Local Storage
+   - Uses IndexedDB for project data
+   - Uses OPFS (Origin Private File System) for media files
+   - Fully serverless operation
+   - Protects user privacy
 
-8. 用户界面
-   - 现代化深色主题界面
-   - 响应式布局设计
-   - 可调节编辑区域比例
-   - 友好的拖放操作体验
+8. User Interface
+   - Modern dark theme
+   - Responsive layout
+   - Adjustable editor panel ratio
+   - Intuitive drag-and-drop experience
 
 ## 注意事项
 
-1. 浏览器兼容性
-   - 仅支持本地部署或HTTPS协议
-   - 仅支持 Chrome 102+和 Edge 102+版本
-   - 建议使用最新版 Chrome或 Edge 以获得最佳体验
+1. Browser Compatibility
+   - Works only on local or HTTPS deployments
+   - Supports only Chrome 102+ and Edge 102+
+   - Recommended to use the latest version of Chrome or Edge for the best experience
 
-2. 存储限制
-   - 使用 IndexedDB 存储项目数据
-   - 使用 OPFS (Origin Private File System) 存储媒体文件
-   - 注意浏览器存储空间限制
+2. Storage Limitations
+   - IndexedDB used for project data
+   - OPFS used for storing media files
+   - Be aware of browser storage limits
 
 3. Performance Considerations
    - Recommended for processing videos under 1080p
@@ -101,4 +101,3 @@
 ## License
 
 MIT License - 详见 [LICENSE](LICENSE) 文件
-
