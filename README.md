@@ -12,19 +12,19 @@
 
 ## 功能特点
 
-1. 多轨道编辑
-   - 支持多个视频、音频、图片和文字轨道
-   - 轨道间支持拖拽排序和位置调整
-   - 轨道操作历史记录
-   - 最多支持10个并行轨道
+1. Multi-track editing
+   - Support multiple video, audio, picture and text tracks
+   - Drag-and-drop sorting and position adjustment are supported between tracks
+   - Track operation history
+   - Support up to 10 parallel tracks
 
-2. 媒体剪辑功能
-   - 视频分割
-   - 音频波形可视化
-   - 视频帧级精确定位
-   - 支持动态图片（GIF）
-   - 支持视频片段的音量调节
-   - 支持视频片段的滤镜
+2. Media editing function
+   - Video segmentation
+   - Visualization of audio waveforms
+   -  Accurate positioning at the video frame level
+   - Support dynamic pictures (GIF)
+   - Support the volume adjustment of video clips
+   -  Support the filter of video clips
 
 3. Text Editing Features
    - Rich text styling options
