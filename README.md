@@ -26,17 +26,17 @@
    - 支持视频片段的音量调节
    - 支持视频片段的滤镜
 
-3. 文字编辑功能
-   - 丰富的文字样式设置
-   - 自定义字体大小、颜色
-   - 文字阴影和描边效果
-   - 多种文本对齐方式
+3. Text Editing Features
+   - Rich text styling options
+   - Customizable font size and color
+   - Text shadow and stroke effects
+   - Multiple text alignment options
 
-4. 实时预览
-   - 实时预览编辑效果
-   - 支持全屏预览
-   - 帧进帧退精确预览
-   - 自适应画布尺寸
+4. Real-Time Preview
+   - Real-time editing preview
+   - Full-screen preview support
+   - Frame-by-frame precise preview
+   - Adaptive canvas sizing
 
 5. 项目管理
    - 本地项目保存
@@ -73,7 +73,6 @@
 3. Performance Considerations
    - Recommended for processing videos under 1080p
    - Long videos may take more time to process
-   - Exporting may be resource-intensive — please be patient
 
 ## 技术栈
 
