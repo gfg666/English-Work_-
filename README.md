@@ -12,11 +12,10 @@
 
 ## 功能特点
 
-1. Multi-Track Editing
-Supports multiple tracks for videos, audio, images, and text.
-Enables drag-and-drop sorting and position adjustment among tracks.
-Keeps the operation history of tracks.
-Supports up to 10 parallel tracks.
+1. Multi-track Editing
+Supports multiple video, audio, image, and text tracks
+Drag-and-drop sorting and position adjustment between tracks
+Track operation history
 2. 媒体剪辑功能
    - 视频分割
    - 音频波形可视化
