@@ -18,13 +18,13 @@
    - 轨道操作历史记录
    - 最多支持10个并行轨道
 
-2. Media Editing Functions
-    - Video Segmentation
-    - Visualization of Audio Waveform
-    - Precise Positioning at the Video Frame Level
-    - Support for Dynamic Images (GIF)
-    - Support for Volume Adjustment of Video Clips
-    - Support for Filters of Video Clips 
+2. 媒体剪辑功能
+   - 视频分割
+   - 音频波形可视化
+   - 视频帧级精确定位
+   - 支持动态图片（GIF）
+   - 支持视频片段的音量调节
+   - 支持视频片段的滤镜
 
 3. 文字编辑功能
    - 丰富的文字样式设置
@@ -38,13 +38,13 @@
    - 帧进帧退精确预览
    - 自适应画布尺寸
 
-5. 项目管理
-   - 本地项目保存
+5. Project Management
+   - Local project saving
 
-6. 导出功能
-   - 支持导出MP4格式
-   - 导出进度实时显示
-   - 支持中断导出操作
+6. Export Function
+   - Support for exporting in MP4 format
+   - Real-time display of export progress
+   - Support for interrupting the export operation
 
 7. 本地化存储
    - 使用IndexedDB存储项目数据
@@ -70,10 +70,10 @@
    - 使用 OPFS (Origin Private File System) 存储媒体文件
    - 注意浏览器存储空间限制
 
-3. 性能考虑
-   - 建议处理 1080p 以下视频
-   - 长视频处理可能需要较长时间
-   - 导出时占用资源较多,请耐心等待
+3. Performance Considerations
+   - Recommended for processing videos under 1080p
+   - Long videos may take more time to process
+   - Exporting may be resource-intensive — please be patient
 
 ## 技术栈
 
